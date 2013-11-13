@@ -1,0 +1,70 @@
+// Defines a plugin for code coverage using cobertura.
+// Based upon the project at
+// http://piotrga.wordpress.com/2010/04/17/gradle-cobertura-integration-revisited/
+// Updates <bvargo>:
+// - include java plugin for sourceSets
+// - project.sourceSets should be sourceSets
+
+logger.info "Configuring Cobertura Plugin"
+
+apply plugin: 'java'
+
+configurations {
+    coberturaRuntime { extendsFrom testRuntime }
+}
+
+dependencies {
+    coberturaRuntime 'net.sourceforge.cobertura:cobertura:1.9+'
+}
+
+def serFile="${project.buildDir}/cobertura.ser"
+def classes="${project.sourceSets.main.output.classesDir}"
+def classesCopy="${classes}-copy"
+
+task cobertura(type: Test) {
+    dependencies {
+        testRuntime 'net.sourceforge.cobertura:cobertura:1.9+'
+    }
+
+    systemProperties["net.sourceforge.cobertura.datafile"] = serFile
+}
+
+cobertura.doFirst {
+    logger.info "Instrumenting classes for Cobertura"
+    if(new File(classes).exists()) {
+        ant {
+            delete(file: serFile, failonerror: false)
+            delete(dir: classesCopy, failonerror: false)
+            copy(todir: classesCopy) { fileset(dir: classes) }
+
+            taskdef(resource: 'tasks.properties', classpath: configurations.coberturaRuntime.asPath)
+
+            'cobertura-instrument'(datafile: serFile) {
+                fileset(dir: classes, includes: "**/*.class", excludes: "**/*Test.class")
+            }
+        }
+    }
+    else {
+        logger.info "No compiled code found. Not running Cobertura"
+    }
+}
+
+cobertura.doLast {
+    if(new File(classesCopy).exists()) {
+        ["html", "xml"].each { format ->
+            ant.'cobertura-report'(destdir: "${project.reporting.baseDir}/cobertura-${format}", format: format, datafile: serFile) {
+                sourceSets.main.java.srcDirs.each {
+                    if(it.exists()) {
+                        logger.info "Including path ${it} in source directories."
+                        fileset(dir: it.absolutePath) {
+                            include(name: '**/*.java')
+                        }
+                    }
+                }
+            }
+        }
+
+        ant.delete(file: classes)
+        ant.move(file: classesCopy, tofile: classes)
+    }
+}
