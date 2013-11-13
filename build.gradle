@@ -1,0 +1,98 @@
+configure(subprojects) {
+    apply from:"file:../cobertura.gradle"
+}
+
+def GROUP_ID = "com.fullcontact.hbase"
+def VERSION = "0.1-SNAPSHOT"
+
+subprojects {
+    apply plugin: "base"
+    apply plugin: "maven"
+    apply plugin: "java"
+
+    // common repositories
+    repositories {
+        // local repository
+        // NOTE: gradle has issues with mavenLocal and mavenCentral being enabled at the same time
+        //mavenLocal()
+
+        // main repository
+        mavenCentral()
+
+        maven {
+            name "Artifactory Realm"
+            url "http://fullcontact.artifactoryonline.com/fullcontact/repo/"
+            credentials {
+                username = "deployer"
+                password = "***REMOVED***"
+            }
+        }
+    }
+
+    dependencies {
+        testCompile group: "junit", name: "junit", version: "4.8.2"
+    }
+
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                if (VERSION.endsWith("-SNAPSHOT")) {
+                    repository(url: "https://fullcontact.artifactoryonline.com/fullcontact/libs-snapshots-local") {
+                        authentication(userName: "deployer", password: "***REMOVED***")
+                    }
+                } else {
+                    repository(url: "https://fullcontact.artifactoryonline.com/fullcontact/libs-releases-local") {
+                        authentication(userName: "deployer", password: "***REMOVED***")
+                    }
+                }
+            }
+        }
+    }
+
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = "sources"
+        from sourceSets.main.allSource
+    }
+    artifacts {
+        archives sourcesJar
+    }
+
+    compileJava.options.compilerArgs = [ "-Xlint:unchecked", "-Xlint:deprecation" ]
+    compileTestJava.options.compilerArgs = [ "-Xlint:unchecked", "-Xlint:deprecation" ]
+
+    test {
+        jvmArgs "-agentlib:hprof=cpu=samples,interval=2,depth=30,thread=y,file=build/profile.hprof"
+    }
+
+    group = GROUP_ID
+    version = VERSION
+
+    // tell ivy to only look for updated libraries during the build process
+    // once a day; otherwise, the cache is used.
+    // To never search for updates, use "eternal", otherwise the form is
+    // "XXd XXh XXm XXs XXXms"
+    System.properties["ivy.cache.ttl.default"] = "01d"
+}
+
+project(":marshal") {
+    dependencies {
+        compile group: "com.google.guava", name:"guava", version:"15.0"
+    }
+}
+
+project(":marshal-mapreduce") {
+    repositories {
+        maven {
+            name "Cloudera"
+            url "https://repository.cloudera.com/artifactory/cloudera-repos"
+        }
+    }
+
+    dependencies {
+        compile project(":marshal")
+
+        compile group: "com.google.guava", name:"guava", version:"15.0"
+
+        compile group: "org.apache.hadoop", name: "hadoop-client", version: "2.0.0-mr1-cdh4.1.0"
+    }
+}
