@@ -39,9 +39,11 @@ public class ByteArray implements Comparable<ByteArray> {
     public ByteArray(byte[] bytes, int beginIndex, int endIndex) {
         // make sure the ranges make sense
         if(endIndex < beginIndex)
-            throw new IllegalArgumentException("The end index must be greater than or equal to beginning index. Got range [" + beginIndex + "," + endIndex + ")");
+            throw new IllegalArgumentException("The end index must be greater than or equal " +
+                   "to beginning index. Got range [" + beginIndex + "," + endIndex + ")");
         if(endIndex > bytes.length)
-            throw new IllegalArgumentException("End index (" + endIndex + ") cannot be greater than the length (" + bytes.length + ").");
+            throw new IllegalArgumentException("End index (" + endIndex + ") cannot be greater " +
+                   "than the length (" + bytes.length + ").");
 
         this.bytes = bytes;
         this.beginIndex = beginIndex;
@@ -49,17 +51,19 @@ public class ByteArray implements Comparable<ByteArray> {
     }
 
     /**
-     * Returns a byte array starting from the given position. That is, calling {@link #getAt} on this object with an
-     * argument of <code>position</code> is equivalent to calling {@link #getAt} with an argument of 0 on the returned
-     * object.
+     * Returns a byte array starting from the given position. That is, calling {@link #getAt} on
+     * this object with an argument of <code>position</code> is equivalent to calling {@link
+     * #getAt} with an argument of 0 on the returned object.
      *
      * @throws IllegalArgumentException if position is less than 0.
      */
     public ByteArray from(int position) {
         if(position < 0)
-            throw new IndexOutOfBoundsException("Position may not be less than 0. Got: " + position);
+            throw new IndexOutOfBoundsException("Position may not be less than 0. " +
+                    "Got: " + position);
         else if(position >= this.size())
-            throw new IndexOutOfBoundsException("Position may not be greater than size (" + this.size() + "). Got: " + position);
+            throw new IndexOutOfBoundsException("Position may not be greater than size " +
+                    "(" + this.size() + "). Got: " + position);
         else if(position == 0)
             return this;
         else
@@ -67,16 +71,19 @@ public class ByteArray implements Comparable<ByteArray> {
     }
 
     /**
-     * Returns a byte array that ends at the position before the given end index. That is, calling {@link #getAt} on this object with an
-     * argument of <code>position</code> will return a byte array of length (position - 1).
+     * Returns a byte array that ends at the position before the given end index. That is, calling
+     * {@link #getAt} on this object with an argument of <code>position</code> will return a byte
+     * array of length (position - 1).
      *
      * @throws IllegalArgumentException if position is less than 0 or larger than the length
      */
     public ByteArray to(int position) {
         if(position < 0)
-            throw new IndexOutOfBoundsException("Position may not be less than 0. Got: " + position);
+            throw new IndexOutOfBoundsException("Position may not be less than 0. " +
+                    "Got: " + position);
         else if(position > this.size())
-            throw new IndexOutOfBoundsException("Position may not be greater than size (" + this.size() + "). Got: " + position);
+            throw new IndexOutOfBoundsException("Position may not be greater than size " +
+                    "(" + this.size() + "). Got: " + position);
         else if(position == this.size())
             return this;
         else
@@ -162,7 +169,8 @@ public class ByteArray implements Comparable<ByteArray> {
      */
     public byte getAt(int position) {
         if(position < 0 || position >= this.size())
-            throw new IndexOutOfBoundsException("Cannot access negative elements. Got " + position);
+            throw new IndexOutOfBoundsException("Cannot access negative elements. " +
+                    "Got " + position);
         return this.bytes[this.beginIndex + position];
     }
 
@@ -201,7 +209,8 @@ public class ByteArray implements Comparable<ByteArray> {
         int index2 = other.beginIndex;
 
         while(index1 < this.endIndex && index2 < other.endIndex) {
-            // get as ints, so we compare bytes in an unsigned manner, not individually signed bytes
+            // get as ints, so we compare bytes in an unsigned manner, not individually signed
+            // bytes
             int one = this.bytes[index1] & 0xFF;
             int two = other.bytes[index2] & 0xFF;
             if(one < two) {
