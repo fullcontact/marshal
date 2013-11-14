@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Marshal is a system for performing custom serialization to/from byte arrays.
  *
@@ -23,11 +25,14 @@ import java.util.Map;
  * orders without mixing of types in the sorting.
  *
  * The serialized form of a marshal looks like the following:
- *  [type code][entry data][separator byte][type code][entry data] ... [type code][entry data]
+ *  [type code][entry data][separator][type code][entry data] ... [type code][entry data][separator]
+ * A previous version of this library did not include the final separator byte by design and used
+ * a different encoding sequence to encode the empty Marshal. This version of the library can
+ * deserialize that encoding format, but will serialize using the new format.
  *
  * @author Brandon Vargo
  */
-public class Marshal implements Comparable<Marshal> {
+public final class Marshal implements Comparable<Marshal> {
     @VisibleForTesting
     static final byte SEPARATOR = (byte)0xFE;
     private static final byte[] SEPARATOR_ARRAY = { SEPARATOR };
@@ -51,7 +56,8 @@ public class Marshal implements Comparable<Marshal> {
         STRING            ((byte)0x05, StringType.INSTANCE),
         MARSHAL           ((byte)0x06, MarshalType.INSTANCE),
         // SEPARATOR (0xFE) is reserved and cannot be used
-        EMPTY             ((byte)0xFF, null);                 // indicates a completely empty marshal
+        // formally the empty Marshal indicator; now left for compatibility
+        LEGACY_EMPTY      ((byte)0xFF, null);
 
         private final byte typeCode;
         private final AbstractType<?> type;
@@ -326,6 +332,13 @@ public class Marshal implements Comparable<Marshal> {
     /**
      * Create a new marshal object from the serialized byte form in native compatibility mode.
      */
+    public Marshal(byte[] bytes) {
+        this(new ByteArray(bytes), null);
+    }
+
+    /**
+     * Create a new marshal object from the serialized byte form in native compatibility mode.
+     */
     public Marshal(ByteArray data) {
         this(data, null);
     }
@@ -342,8 +355,8 @@ public class Marshal implements Comparable<Marshal> {
         if(data == null || data.size() == 0)
             return;
 
-        // check for an empty byte array, encoded using a single empty type byte
-        if(data.getAt(0) == EntryType.EMPTY.getTypeCode())
+        // check for an empty byte array, encoded as either a single separator byte or using the legacy empty byte
+        if(data.getAt(0) == SEPARATOR || data.getAt(0) == EntryType.LEGACY_EMPTY.getTypeCode())
             return;
 
         // split data into entries
@@ -372,8 +385,9 @@ public class Marshal implements Comparable<Marshal> {
             ByteArray valueBytes = unescape(escapedValueBytes, SEPARATOR);
             this.contents.add(Entry.fromBytes(type, valueBytes));
 
-            // if next position is the same as size, break
-            if(separatorPosition == data.size())
+            // if next position is the same as size (legacy version, with no terminating separator) or size-1 (new
+            // version, with a terminating separator), break
+            if(separatorPosition == data.size() || separatorPosition == (data.size() - 1))
                 break;
 
             // advance past the separator
@@ -383,28 +397,107 @@ public class Marshal implements Comparable<Marshal> {
 
     /**
      * Returns the Marshal as a single, serialized ByteArray.
+     *
+     * @return A serialized, full Marshal.
      */
-    public ByteArray toBytes() {
+    public ByteArray toByteArray() {
+        ByteArray byteArray = this.prefixTerminated(this.contents.size());
+        if(byteArray.isEmpty())
+            return SEPARATOR_BYTE_ARRAY;
+        else
+            return byteArray;
+    }
+
+    /**
+     * Returns the Marshal as a single, serialized byte array.
+     */
+    public byte[] toBytes() {
+        return this.toByteArray().toArray();
+    }
+
+    /**
+     * Returns the unterminated prefix of the Marshal containing only the first n entries.
+     *
+     * A separator is not included on the end of the prefix. That is, given two Marshals:
+     * a) a:cat:named:kitty:!:
+     * b) a:cat:named:kitty_kat:!:
+     *
+     * Then a.prefix(4) is a:cat:named:kitty, which is a prefix of (b).
+     *
+     * @param n The number of items to include in the prefix. That is, entries [0,n) will be included in the result.
+     * @return The prefix. If the Marshal is empty, then the empty byte array will be returned.
+     */
+    public ByteArray prefixUnterminated(int n) {
+        return ByteArray.combine(this.prefix(n));
+    }
+
+    /**
+     * @see #prefixUnterminated
+     * @return Byte array version of {@link #prefixUnterminated}.
+     */
+    public byte[] prefixUnterminatedBytes(int n) {
+        return this.prefixUnterminated(n).toArray();
+    }
+
+    /**
+     * Returns the terminated prefix of the Marshal containing only the first n entries.
+     *
+     * A separator is included on the end of the prefix. That is, given two Marshals:
+     * a) a:cat:named:kitty:!:
+     * b) a:cat:named:kitty_kat:!:
+     *
+     * Then a.prefix(4) is a:cat:named:kitty:, which is not a prefix of (b).
+     *
+     * @param n The number of items to include in the prefix. That is, entries [0,n) will be included in the result.
+     * @return The prefix. If the Marshal is empty, then the empty byte array will be returned.
+     */
+    public ByteArray prefixTerminated(int n) {
+        List<ByteArray> prefix = this.prefix(n);
+        if(!prefix.isEmpty())
+            prefix.add(SEPARATOR_BYTE_ARRAY);
+
+        return ByteArray.combine(prefix);
+    }
+
+    /**
+     * @see #prefixTerminated
+     * @return Byte array version of {@link #prefixTerminated}.
+     */
+    public byte[] prefixTerminatedBytes(int n) {
+        return this.prefixTerminated(n).toArray();
+    }
+
+    /**
+     * Prefix of the Marshal for the first n entries. The results are not combined, and an end terminator is not
+     * included.
+     *
+     * @param n The number of items to include in the prefix. That is, indices [0,n) will be included in the result.
+     * @return A list of byte array parts. The caller is free to mutate the resulting list as needed.
+     */
+    private List<ByteArray> prefix(int n) {
+        checkArgument(n >= 0, "The number of parts in the prefix must be non-negative.");
+        checkArgument(n <= this.contents.size(), "The number of parts in the prefix must be <= the number of parts.");
+
         List<ByteArray> results = new ArrayList<ByteArray>();
-        for(Entry e : this.contents) {
-            byte[] typeBytes = { e.getEntryType().getTypeCode() };
-            ByteArray type = new ByteArray(typeBytes);
-            ByteArray escapedData = escape(e.getData(), SEPARATOR);
+        {
+            int i = 0;
+            for(Entry e : this.contents) {
+                // process only 0-(n-1) entries
+                if(i >= n)
+                    break;
+                i++;
 
-            if(!results.isEmpty())
-                results.add(SEPARATOR_BYTE_ARRAY);
-            results.add(type);
-            results.add(escapedData);
-        }
+                byte[] typeBytes = { e.getEntryType().getTypeCode() };
+                ByteArray type = new ByteArray(typeBytes);
+                ByteArray escapedData = escape(e.getData(), SEPARATOR);
 
-        if(results.isEmpty()) {
-            // if there is nothing in the marshal, then encode the marshal as a single empty type byte
-            byte[] emptyBytes = { EntryType.EMPTY.getTypeCode() };
-            return new ByteArray(emptyBytes);
+                if(!results.isEmpty())
+                    results.add(SEPARATOR_BYTE_ARRAY);
+                results.add(type);
+                results.add(escapedData);
+            }
         }
-        else {
-            return ByteArray.combine(results);
-        }
+        return results;
     }
 
     /**
@@ -567,8 +660,8 @@ public class Marshal implements Comparable<Marshal> {
 
     @Override
     public int compareTo(Marshal other) {
-        ByteArray bytes1 = this.toBytes();
-        ByteArray bytes2 = other.toBytes();
+        ByteArray bytes1 = this.toByteArray();
+        ByteArray bytes2 = other.toByteArray();
 
         return bytes1.compareTo(bytes2);
     }
