@@ -138,7 +138,8 @@ public final class Marshal implements Comparable<Marshal> {
             if(data == null)
                 throw new NullPointerException("Data not provided; must be non-null.");
             if(data.size() == 0)
-                throw new MarshalException("Data type must provide non-empty data for the serialization.");
+                throw new MarshalException("Data type must provide non-empty data for the "  +
+                        "serialization.");
 
             Entry entry = new Entry(entryType);
             entry.data = data;
@@ -172,18 +173,19 @@ public final class Marshal implements Comparable<Marshal> {
         }
 
         /**
-         * Get the data type of this entry. Note that this field can also be retrieved using the entry type, but we have
-         * this additional method for type safety.
+         * Get the data type of this entry. Note that this field can also be retrieved using the
+         * entry type, but we have this additional method for type safety.
          */
-        // unchecked conversion when initializing data type; we must manually ensure that the types always map
+        // unchecked conversion when initializing data type
+        // we must manually ensure that the types always map
         @SuppressWarnings("unchecked")
         private AbstractType<T> getDataType() {
             return (AbstractType<T>)this.getEntryType().getType();
         }
 
         /**
-         * Gets the data in this entry. The data contained in the byte array has the type equal to the type of this
-         * entry.
+         * Gets the data in this entry. The data contained in the byte array has the type equal to
+         * the type of this entry.
          */
         public ByteArray getData() {
             if(this.data == null)
@@ -192,8 +194,8 @@ public final class Marshal implements Comparable<Marshal> {
         }
 
         /**
-         * Gets the field object stored in this entry. This is equivalent to demarshaling the data contained in this
-         * entry.
+         * Gets the field object stored in this entry. This is equivalent to demarshaling the data
+         * contained in this entry.
          */
         public T getFieldObject() {
             if(this.fieldObject == null)
@@ -293,9 +295,10 @@ public final class Marshal implements Comparable<Marshal> {
         }
 
         /**
-         * Appends the given marshal to the marshal under construction. This equivalent to calling add for every entry
-         * in the provided marshal. This differs from {@link #addMarshal} in that addMarshal will add a Marshal as a
-         * sub-element, while this method exgtends the current data structure with the contents of another Marshal.
+         * Appends the given marshal to the marshal under construction. This equivalent to calling
+         * add for every entry in the provided marshal. This differs from {@link #addMarshal} in
+         * that addMarshal will add a Marshal as a sub-element, while this method exgtends the
+         * current data structure with the contents of another Marshal.
          */
         public Builder appendMarshal(Marshal m) {
             this.contents.addAll(m.contents);
@@ -344,9 +347,11 @@ public final class Marshal implements Comparable<Marshal> {
     }
 
     /**
-     * Create a new marshal object from the serialized byte form with the given compatibility mode.
+     * Create a new marshal object from the serialized byte form with the given compatibility
+     * mode.
      *
-     * If the compatibility mode is not specified, then no compatibility mode (native mode) is used.
+     * If the compatibility mode is not specified, then no compatibility mode (native mode) is
+     * used.
      */
     public Marshal(ByteArray data, MarshalCompatibilityMode compatibilityMode) {
         this.contents = new ArrayList<Entry>();
@@ -355,7 +360,8 @@ public final class Marshal implements Comparable<Marshal> {
         if(data == null || data.size() == 0)
             return;
 
-        // check for an empty byte array, encoded as either a single separator byte or using the legacy empty byte
+        // check for an empty byte array, encoded as either a single separator byte or using the
+        // legacy empty byte
         if(data.getAt(0) == SEPARATOR || data.getAt(0) == EntryType.LEGACY_EMPTY.getTypeCode())
             return;
 
@@ -385,8 +391,8 @@ public final class Marshal implements Comparable<Marshal> {
             ByteArray valueBytes = unescape(escapedValueBytes, SEPARATOR);
             this.contents.add(Entry.fromBytes(type, valueBytes));
 
-            // if next position is the same as size (legacy version, with no terminating separator) or size-1 (new
-            // version, with a terminating separator), break
+            // if next position is the same as size (legacy version, with no terminating
+            // separator) or size-1 (new version, with a terminating separator), done processing
             if(separatorPosition == data.size() || separatorPosition == (data.size() - 1))
                 break;
 
@@ -424,7 +430,8 @@ public final class Marshal implements Comparable<Marshal> {
      *
      * Then a.prefix(4) is a:cat:named:kitty, which is a prefix of (b).
      *
-     * @param n The number of items to include in the prefix. That is, entries [0,n) will be included in the result.
+     * @param n The number of items to include in the prefix. That is, entries [0,n) will be
+     * included in the result.
      * @return The prefix. If the Marshal is empty, then the empty byte array will be returned.
      */
     public ByteArray prefixUnterminated(int n) {
@@ -448,7 +455,8 @@ public final class Marshal implements Comparable<Marshal> {
      *
      * Then a.prefix(4) is a:cat:named:kitty:, which is not a prefix of (b).
      *
-     * @param n The number of items to include in the prefix. That is, entries [0,n) will be included in the result.
+     * @param n The number of items to include in the prefix. That is, entries [0,n) will be
+     * included in the result.
      * @return The prefix. If the Marshal is empty, then the empty byte array will be returned.
      */
     public ByteArray prefixTerminated(int n) {
@@ -468,15 +476,18 @@ public final class Marshal implements Comparable<Marshal> {
     }
 
     /**
-     * Prefix of the Marshal for the first n entries. The results are not combined, and an end terminator is not
-     * included.
+     * Prefix of the Marshal for the first n entries. The results are not combined, and an end
+     * terminator is not included.
      *
-     * @param n The number of items to include in the prefix. That is, indices [0,n) will be included in the result.
-     * @return A list of byte array parts. The caller is free to mutate the resulting list as needed.
+     * @param n The number of items to include in the prefix. That is, indices [0,n) will be
+     * included in the result.
+     * @return A list of byte array parts. The caller is free to mutate the resulting list as
+     * needed.
      */
     private List<ByteArray> prefix(int n) {
         checkArgument(n >= 0, "The number of parts in the prefix must be non-negative.");
-        checkArgument(n <= this.contents.size(), "The number of parts in the prefix must be <= the number of parts.");
+        checkArgument(n <= this.contents.size(),
+                "The number of parts in the prefix must be <= the number of parts.");
 
         List<ByteArray> results = new ArrayList<ByteArray>();
         {
@@ -637,15 +648,16 @@ public final class Marshal implements Comparable<Marshal> {
     }
 
     /**
-     * A subrange of the current Marshal starting at the given index and continuing through the end of the Marshal.
+     * A subrange of the current Marshal starting at the given index and continuing through the
+     * end of the Marshal.
      */
     public Marshal from(int fromIndex) {
         return subrange(fromIndex, this.size());
     }
 
     /**
-     * A subrange of the current Marshal starting at the start of the Marshal continuing up to, but not including, the
-     * given end index.
+     * A subrange of the current Marshal starting at the start of the Marshal continuing up to,
+     * but not including, the given end index.
      */
     public Marshal to(int toIndex) {
         return subrange(0, toIndex);
@@ -693,8 +705,8 @@ public final class Marshal implements Comparable<Marshal> {
     /**
      * Escapes all escapeByte bytes by prepending the escapeByte byte.
      *
-     * For example, if escapeByte were 2 and the array was { 0, 1, 2, 3 }, then the output array would be
-     * { 0, 1, 2, 2, 3 }.
+     * For example, if escapeByte were 2 and the array was { 0, 1, 2, 3 }, then the output array
+     * would be { 0, 1, 2, 2, 3 }.
      */
     @VisibleForTesting
     static ByteArray escape(ByteArray input, byte escapeByte) {
@@ -728,8 +740,8 @@ public final class Marshal implements Comparable<Marshal> {
     /**
      * Unescapes all escaped unescapeByte bytes by removing the extra unescapeByte byte.
      *
-     * For example, if unescapeByte were 2 and the array was { 0, 1, 2, 2, 3 }, then the output array would be
-     * { 0, 1, 2, 3 }.
+     * For example, if unescapeByte were 2 and the array was { 0, 1, 2, 2, 3 }, then the output
+     * array would be { 0, 1, 2, 3 }.
      *
      * Any invalid escapings are ignored.
      */
@@ -749,7 +761,8 @@ public final class Marshal implements Comparable<Marshal> {
                 }
             }
             else {
-                // clear the escape byte if this is not an escape character, since there was an invalid escaping
+                // clear the escape byte if this is not an escape character, since there was an
+                // invalid escaping
                 lastWasEscaped = false;
             }
         }
@@ -759,7 +772,9 @@ public final class Marshal implements Comparable<Marshal> {
 
         // unescape the bytes
         lastWasEscaped = false;
-        for(int sourceIndex = 0, targetIndex = 0; sourceIndex < input.size(); sourceIndex++, targetIndex++) {
+        for(int sourceIndex = 0, targetIndex = 0;
+                sourceIndex < input.size();
+                sourceIndex++, targetIndex++) {
             byte b = input.getAt(sourceIndex);
             if(b == unescapeByte) {
                 if(lastWasEscaped) {
@@ -769,7 +784,8 @@ public final class Marshal implements Comparable<Marshal> {
                 }
                 else {
                     // escape byte; skip
-                    // this removes one from the index, and then the loop adds it back again, so the position does not
+                    // this removes one from the index, and then the loop adds it back again, so
+                    // the position does not
                     // change
                     targetIndex--;
                     lastWasEscaped = true;
@@ -777,11 +793,12 @@ public final class Marshal implements Comparable<Marshal> {
                 }
             }
             else if(lastWasEscaped) {
-                // not the escape byte, but the last byte was an escape byte, meaning this was an inproper escape
+                // not the escape byte, but the last byte was an escape byte, meaning this was an
+                // inproper escape
                 lastWasEscaped = false;
 
-                // in addition, need to write the last byte, since it was skipped thinking that the next character would be
-                // an escape character
+                // in addition, need to write the last byte, since it was skipped thinking that
+                // the next character would be an escape character
                 unescaped[targetIndex] = unescapeByte;
                 targetIndex++;
             }
@@ -801,8 +818,8 @@ public final class Marshal implements Comparable<Marshal> {
     /**
      * Finds the position of the first non-escaped byte that matches the escape character.
      *
-     * If there is no non-escaped escape byte, then return value is one greater than the length of the input, as if
-     * there were a separator one position past the end of the array.
+     * If there is no non-escaped escape byte, then return value is one greater than the length of
+     * the input, as if there were a separator one position past the end of the array.
      */
     @VisibleForTesting
     static int findSeparator(ByteArray input, byte escapeByte) {

@@ -11,7 +11,8 @@ import java.io.IOException;
  */
 abstract class AbstractType<T> {
     /**
-     * Marshals the given type into a byte array. The ordering should be byte lexographical if ordering is supported.
+     * Marshals the given type into a byte array. The ordering should be byte lexographical if
+     * ordering is supported.
      */
     public abstract ByteArray marshal(T object);
 
