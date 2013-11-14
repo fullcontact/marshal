@@ -174,6 +174,13 @@ public class ByteArray implements Comparable<ByteArray> {
     }
 
     /**
+     * Returns true if this byte array is of length 0.
+     */
+    public boolean isEmpty() {
+        return this.size() == 0;
+    }
+
+    /**
      * Returns a byte array representation of the current ByteArray.
      */
     public byte[] toArray() {

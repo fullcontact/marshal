@@ -4,6 +4,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.Arrays;
+
 import static org.junit.Assert.*;
 
 /**
@@ -198,9 +200,10 @@ public class MarshalTest {
             .addLong(l)
             .addString(s)
             .addByte(b)
+            .addMarshal(Marshal.EMPTY)
             .build();
 
-        assertEquals(6, m.size());
+        assertEquals(7, m.size());
 
         // allow zero tolerance in the double comparison, since the representation should be exact
         assertArrayEquals(byteArray.toArray(), m.getByteArrayAt(0).toArray());
@@ -209,6 +212,7 @@ public class MarshalTest {
         assertEquals(l, m.getLongAt(3));
         assertEquals(s, m.getStringAt(4));
         assertEquals(b, m.getByteAt(5));
+        assertEquals(Marshal.EMPTY, m.getMarshalAt(6));
     }
 
     @Test(expected=MarshalException.class)
@@ -348,13 +352,15 @@ public class MarshalTest {
             .addInteger(i)
             .addLong(l)
             .addString(s)
+            .addMarshal(Marshal.EMPTY)
             .addByte(b)
+            .addMarshal(Marshal.EMPTY)
             .build();
 
-        ByteArray mBytes = input.toBytes();
+        ByteArray mBytes = input.toByteArray();
         Marshal m = new Marshal(mBytes);
 
-        assertEquals(6, m.size());
+        assertEquals(8, m.size());
 
         // allow zero tolerance in the double comparison, since the representation should be exact
         assertArrayEquals(byteArray.toArray(), m.getByteArrayAt(0).toArray());
@@ -362,7 +368,57 @@ public class MarshalTest {
         assertEquals(i, m.getIntegerAt(2));
         assertEquals(l, m.getLongAt(3));
         assertEquals(s, m.getStringAt(4));
-        assertEquals(b, m.getByteAt(5));
+        assertEquals(Marshal.EMPTY, m.getMarshalAt(5));
+        assertEquals(b, m.getByteAt(6));
+        assertEquals(Marshal.EMPTY, m.getMarshalAt(7));
+
+        // ensure encoded format is correct
+        byte[] expected = {
+            // byte array
+            1,
+            0, 1, 2, 3, 4, 5,
+            // separator
+            (byte)0xFE,
+            // double
+            2,
+            (byte)-64, 9, 30, (byte)-72, 81, (byte)-21, (byte)-123, 31,
+            // separator
+            (byte)0xFE,
+            // integer
+            3,
+            0, 0, 0, 22,
+            // separator
+            (byte)0xFE,
+            // long
+            4,
+            1, (byte)-74, (byte)-101, 75, (byte)-90, 48, (byte)-13, 78,
+            // separator
+            (byte)0xFE,
+            // string
+            5,
+            32, 84, 104, (byte)-61, (byte)-85, 32, 113, 117, (byte)-61, (byte)-83, 99, 107, 32, 98, 114, (byte)-61,
+            (byte)-74, 119, 110, 32, 102, 111, 120, 32, 106, (byte)-61, (byte)-71, 109, 112, 115, 32, 111, 118, 101,
+            114, 32, 116, 104, 101, 32, 108, 97, 122, 121, 32, 100, 111, 103, 33, 32,
+            // separator
+            (byte)0xFE,
+            // empty Marshal
+            6,
+            (byte)0xFE, (byte)0xFE,
+            // separator
+            (byte)0xFE,
+            // single byte
+            0,
+            (byte)-128,
+            // separator
+            (byte)0xFE,
+            // empty Marshal
+            6,
+            (byte)0xFE, (byte)0xFE,
+            // terminating separator
+            (byte)0xFE
+        };
+
+        assertArrayEquals(expected, m.toBytes());
     }
 
     @Test
@@ -375,7 +431,7 @@ public class MarshalTest {
             .addByte(b2)
             .build();
 
-        ByteArray mBytes = input.toBytes();
+        ByteArray mBytes = input.toByteArray();
         Marshal m = new Marshal(mBytes);
 
         assertEquals(2, m.size());
@@ -401,7 +457,7 @@ public class MarshalTest {
             .addByte(b)
             .build();
 
-        ByteArray mBytes = input.toBytes();
+        ByteArray mBytes = input.toByteArray();
         Marshal m = new Marshal(mBytes);
 
         assertEquals(5, m.size());
@@ -440,7 +496,7 @@ public class MarshalTest {
             .addMarshal(embedded)
             .build();
 
-        ByteArray mBytes = input.toBytes();
+        ByteArray mBytes = input.toByteArray();
         Marshal m = new Marshal(mBytes);
 
         assertEquals(6, m.size());
@@ -485,7 +541,7 @@ public class MarshalTest {
             .appendMarshal(input2)
             .build();
 
-        ByteArray mBytes = input.toBytes();
+        ByteArray mBytes = input.toByteArray();
         Marshal m = new Marshal(mBytes);
 
         assertEquals(5, m.size());
@@ -522,7 +578,7 @@ public class MarshalTest {
             .appendMarshal(input2)
             .build();
 
-        ByteArray mBytes = input.toBytes();
+        ByteArray mBytes = input.toByteArray();
         Marshal m = new Marshal(mBytes);
 
         assertEquals(5, m.size());
@@ -539,7 +595,7 @@ public class MarshalTest {
     public void testSerializeDeserialize__empty() {
         Marshal input = new Marshal.Builder().build();
 
-        ByteArray mBytes = input.toBytes();
+        ByteArray mBytes = input.toByteArray();
         assertNotNull(mBytes);
 
         Marshal m = new Marshal(mBytes);
@@ -554,7 +610,7 @@ public class MarshalTest {
             .addMarshal(new Marshal.Builder().build())
             .build();
 
-        ByteArray mBytes = input.toBytes();
+        ByteArray mBytes = input.toByteArray();
         Marshal m = new Marshal(mBytes);
 
         assertEquals(3, m.size());
@@ -572,7 +628,7 @@ public class MarshalTest {
             .addString("")
             .build();
 
-        ByteArray mBytes = input.toBytes();
+        ByteArray mBytes = input.toByteArray();
         Marshal m = new Marshal(mBytes);
 
         assertEquals(3, m.size());
@@ -583,15 +639,20 @@ public class MarshalTest {
     }
 
     @Test
-    public void testDeserialize__null() {
-        Marshal m = new Marshal(null);
+    public void testDeserialize__nullByteArray() {
+        Marshal m = new Marshal((ByteArray)null);
+        assertEquals(0, m.size());
+    }
+
+    @Test
+    public void testDeserialize__nullBytes() {
+        Marshal m = new Marshal((byte[])null);
         assertEquals(0, m.size());
     }
 
     @Test(expected=MarshalException.class)
     public void testDeserialize__invalid() {
-        // separator will always be an invalid type byte
-        byte[] bytes = { Marshal.SEPARATOR, 1, 2, 3, 4 };
+        byte[] bytes = { (byte)0xFD, 1, 2, 3, 4 };
         ByteArray byteArray = new ByteArray(bytes);
 
         Marshal m = new Marshal(byteArray);
@@ -692,10 +753,242 @@ public class MarshalTest {
         assertSame(Marshal.EMPTY, new Marshal.Builder().build());
     }
 
+    @Test
+    public void testPrefixUnterminated() {
+        Marshal m1 = new Marshal.Builder()
+            .addString("a")
+            .addString("cat")
+            .addString("named")
+            .addString("kitty")
+            .build();
+        Marshal m2 = new Marshal.Builder()
+            .addString("a")
+            .addString("cat")
+            .addString("named")
+            .addString("kitty_kat")
+            .build();
+
+        byte[] prefix1 = m1.prefixUnterminatedBytes(4);
+        byte[] prefix2 = m2.prefixUnterminatedBytes(4);
+
+        // prefix1 is prefix of prefix2
+        for(int i = 0; i < prefix1.length; i++)
+            assertTrue(prefix1[i] == prefix2[i]);
+
+        byte[] expected = {
+            // string
+            (byte)5,
+            // "a"
+            (byte)97,
+            // separator
+            (byte)0xFE,
+
+            // string
+            (byte)5,
+            // "cat"
+            (byte)99, (byte)97, (byte)116,
+            // separator
+            (byte)0xFE,
+
+            // string
+            (byte)5,
+            // "named"
+            (byte)110, (byte)97, (byte)109, (byte)101, (byte)100,
+            // seperator
+            (byte)0xFE,
+
+            // string
+            (byte)5,
+            // kitty
+            (byte)107, (byte)105, (byte)116, (byte)116, (byte)121
+        };
+
+        assertArrayEquals(expected, prefix1);
+    }
+
+    @Test
+    public void testPrefixTerminated() {
+        Marshal m1 = new Marshal.Builder()
+            .addString("a")
+            .addString("cat")
+            .addString("named")
+            .addString("kitty")
+            .addString("something here")
+            .build();
+        Marshal m2 = new Marshal.Builder()
+            .addString("a")
+            .addString("cat")
+            .addString("named")
+            .addString("kitty_kat")
+            .addString("something here")
+            .build();
+
+        byte[] prefix1 = m1.prefixTerminatedBytes(4);
+        byte[] prefix2 = m2.prefixTerminatedBytes(4);
+
+        // all bytes up to the last byte are the same (unterminated case)
+        for(int i = 0; i < prefix1.length - 1; i++)
+            assertTrue(prefix1[i] == prefix2[i]);
+        // last byte is not the same (separator vs underscore)
+        assertTrue(prefix1[prefix1.length - 1] != prefix2[prefix1.length - 1]);
+
+        byte[] expected = {
+            // string
+            (byte)5,
+            // "a"
+            (byte)97,
+            // separator
+            (byte)0xFE,
+
+            // string
+            (byte)5,
+            // "cat"
+            (byte)99, (byte)97, (byte)116,
+            // separator
+            (byte)0xFE,
+
+            // string
+            (byte)5,
+            // "named"
+            (byte)110, (byte)97, (byte)109, (byte)101, (byte)100,
+            // seperator
+            (byte)0xFE,
+
+            // string
+            (byte)5,
+            // kitty
+            (byte)107, (byte)105, (byte)116, (byte)116, (byte)121,
+            // seperator
+            (byte)0xFE
+        };
+
+        assertArrayEquals(expected, prefix1);
+
+        // terminated prefix of everything should be the same as the serialized form for anything that is not empty
+        assertEquals(m1.toByteArray(), m1.prefixTerminated(5));
+        assertEquals(m2.toByteArray(), m2.prefixTerminated(5));
+    }
+
+    @Test
+    public void testPrefixUnterminated__emptyMarshal() {
+        Marshal m = new Marshal.Builder()
+            .addMarshal(Marshal.EMPTY)
+            .build();
+
+        byte[] prefix = m.prefixUnterminatedBytes(1);
+
+        byte[] expected = {
+            // empty Marshal
+            6,
+            (byte)0xFE, (byte)0xFE
+        };
+
+        assertArrayEquals(expected, prefix);
+    }
+
+    @Test
+    public void testPrefixTerminated__emptyMarshal() {
+        Marshal m = new Marshal.Builder()
+            .addMarshal(Marshal.EMPTY)
+            .build();
+
+        byte[] prefix = m.prefixTerminatedBytes(1);
+
+        byte[] expected = {
+            // empty Marshal
+            6,
+            (byte)0xFE, (byte)0xFE,
+            // terminating separator
+            (byte)0xFE
+        };
+
+        assertArrayEquals(expected, prefix);
+    }
+
+    @Test
+    public void testPrefixUnterminated__empty() {
+        Marshal m = new Marshal.Builder()
+            .build();
+
+        byte[] prefix = m.prefixUnterminatedBytes(0);
+        assertEquals(0, prefix.length);
+    }
+
+    @Test
+    public void testPrefixUnterminated__nothingSelected() {
+        Marshal m = new Marshal.Builder()
+            .addString("foo")
+            .build();
+
+        byte[] prefix = m.prefixUnterminatedBytes(0);
+        assertEquals(0, prefix.length);
+    }
+
+    @Test
+    public void testPrefixTerminated__empty() {
+        Marshal m = new Marshal.Builder()
+            .build();
+
+        byte[] prefix = m.prefixTerminatedBytes(0);
+        assertEquals(0, prefix.length);
+    }
+
+    @Test
+    public void testPrefixTerminated__nothingSelected() {
+        Marshal m = new Marshal.Builder()
+            .addString("foo")
+            .build();
+
+        byte[] prefix = m.prefixTerminatedBytes(0);
+        assertEquals(0, prefix.length);
+    }
+
+    @Test
+    public void testDeserialize_legacyNoTerminator() {
+        byte[] input = {
+            // string
+            (byte)5,
+            // "a"
+            (byte)97,
+            // separator
+            (byte)0xFE,
+
+            // string
+            (byte)5,
+            // "cat"
+            (byte)99, (byte)97, (byte)116,
+            // separator
+            (byte)0xFE,
+
+            // string
+            (byte)5,
+            // "named"
+            (byte)110, (byte)97, (byte)109, (byte)101, (byte)100,
+            // seperator
+            (byte)0xFE,
+
+            // string
+            (byte)5,
+            // kitty
+            (byte)107, (byte)105, (byte)116, (byte)116, (byte)121
+        };
+
+        Marshal output = new Marshal(input);
+
+        Marshal expected = new Marshal.Builder()
+            .addString("a")
+            .addString("cat")
+            .addString("named")
+            .addString("kitty")
+            .build();
+
+        assertEquals(expected, output);
+    }
+
     /**
-     * Although we do not require a stable hash code for serialization, we require a stable hash code across JVM
-     * instances for reducing. If the components of the hash code change, then this test can change, so long as
-     * successive runs in different JVMs of the test produce the same hashcode.
+     * Although we do not require (or specify) a stable hash code for serialization, we require a stable hash code
+     * across JVM instances. This is used in MapReduce, among other uses. If the components of the hash code change,
+     * then this test can change, so long as successive runs in different JVMs of the test produce the same hashcode.
      */
     @Test
     public void testHashCode__stable() {

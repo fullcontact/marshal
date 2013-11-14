@@ -17,7 +17,7 @@ final class MarshalType extends AbstractType<Marshal> {
 
     @Override
     public ByteArray marshal(Marshal m) {
-        return m.toBytes();
+        return m.toByteArray();
     }
 
     @Override
