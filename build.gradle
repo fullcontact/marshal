@@ -3,7 +3,7 @@ configure(subprojects) {
 }
 
 def GROUP_ID = "com.fullcontact.hbase"
-def VERSION = "0.1-SNAPSHOT"
+def VERSION = "0.1"
 
 subprojects {
     apply plugin: "base"
