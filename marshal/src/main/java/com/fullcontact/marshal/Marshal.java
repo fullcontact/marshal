@@ -240,11 +240,11 @@ public final class Marshal implements Comparable<Marshal> {
     public static class Builder {
         private List<Entry> contents;
 
-        public Builder() {
+        private Builder() {
             this.contents = new ArrayList<Entry>();
         }
 
-        public Builder(Marshal marshal) {
+        private Builder(Marshal marshal) {
             this.contents = marshal.contents;
         }
 
@@ -342,7 +342,7 @@ public final class Marshal implements Comparable<Marshal> {
     /**
      * Create a new marshal object from the serialized byte form in native compatibility mode.
      */
-    public Marshal(ByteArray data) {
+    private Marshal(ByteArray data) {
         this(data, null);
     }
 
@@ -353,7 +353,7 @@ public final class Marshal implements Comparable<Marshal> {
      * If the compatibility mode is not specified, then no compatibility mode (native mode) is
      * used.
      */
-    public Marshal(ByteArray data, MarshalCompatibilityMode compatibilityMode) {
+    private Marshal(ByteArray data, MarshalCompatibilityMode compatibilityMode) {
         this.contents = new ArrayList<Entry>();
 
         // if no data, then do not read anything and leave the marshal empty
@@ -399,6 +399,32 @@ public final class Marshal implements Comparable<Marshal> {
             // advance past the separator
             data = data.from(separatorPosition + 1);
         }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static Builder builder(Marshal m) {
+        return new Builder(m);
+    }
+
+    public static Marshal fromBytes(ByteArray bytes) {
+        return new Marshal(bytes);
+    }
+
+    public static Marshal fromBytes(byte[] bytes) {
+        return fromBytes(new ByteArray(bytes));
+    }
+
+    @Deprecated
+    public static Marshal fromBytes(ByteArray bytes, MarshalCompatibilityMode compatibilityMode) {
+        return new Marshal(bytes, compatibilityMode);
+    }
+
+    @Deprecated
+    public static Marshal fromBytes(byte[] bytes, MarshalCompatibilityMode compatibilityMode) {
+        return fromBytes(new ByteArray(bytes), compatibilityMode);
     }
 
     /**
