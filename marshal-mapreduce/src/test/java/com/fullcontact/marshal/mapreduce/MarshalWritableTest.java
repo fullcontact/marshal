@@ -27,7 +27,7 @@ public class MarshalWritableTest {
         int i = 3;
         double d = 3.14;
 
-        Marshal marshal = new Marshal.Builder()
+        Marshal marshal = Marshal.builder()
             .addString(string1)
             .addString(string2)
             .addInteger(i)
@@ -49,7 +49,7 @@ public class MarshalWritableTest {
         String string1 = "string1";
         String string2 = "string22";
 
-        Marshal marshal1 = new Marshal.Builder()
+        Marshal marshal1 = Marshal.builder()
             .addString(string1)
             .addString(string2)
             .addInteger(-23)
@@ -60,7 +60,7 @@ public class MarshalWritableTest {
         input1.write(new DataOutputStream(input1Stream));
         byte[] input1Bytes = input1Stream.toByteArray();
 
-        Marshal marshal2 = new Marshal.Builder()
+        Marshal marshal2 = Marshal.builder()
             .addString(string2)
             .addString(string1)
             .addInteger(-23)

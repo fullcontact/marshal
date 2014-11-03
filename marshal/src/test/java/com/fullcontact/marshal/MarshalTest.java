@@ -193,7 +193,7 @@ public class MarshalTest {
         String s = " Thë quíck bröwn fox jùmps over the lazy dog! ";
         byte b = (byte)0x80;
 
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .addByteArray(byteArray)
             .addDouble(d)
             .addInteger(i)
@@ -219,7 +219,7 @@ public class MarshalTest {
     public void testGetAt__invalidType__byte() {
         int i = 22;
 
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .addInteger(i)
             .build();
 
@@ -231,7 +231,7 @@ public class MarshalTest {
         byte[] bytes = { 0, 1, 2, 3, 4, 5 };
         ByteArray byteArray = new ByteArray(bytes);
 
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .addByteArray(byteArray)
             .build();
 
@@ -242,7 +242,7 @@ public class MarshalTest {
     public void testGetAt__invalidType__byteArray() {
         int i = 22;
 
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .addInteger(i)
             .build();
 
@@ -253,7 +253,7 @@ public class MarshalTest {
     public void testGetAt__invalidType__double() {
         int i = 22;
 
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .addInteger(i)
             .build();
 
@@ -264,7 +264,7 @@ public class MarshalTest {
     public void testGetAt__invalidType__integer() {
         double d = 3.14;
 
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .addDouble(d)
             .build();
 
@@ -275,7 +275,7 @@ public class MarshalTest {
     public void testGetAt__invalidType__long() {
         int i = 22;
 
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .addInteger(i)
             .build();
 
@@ -286,7 +286,7 @@ public class MarshalTest {
     public void testGetAt__invalidType__string() {
         int i = 22;
 
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .addInteger(i)
             .build();
 
@@ -297,7 +297,7 @@ public class MarshalTest {
     public void testGetAt__invalidType__marshall() {
         int i = 22;
 
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .addInteger(i)
             .build();
 
@@ -313,7 +313,7 @@ public class MarshalTest {
         long l = 123456789012345678l;
         String s = " Thë quíck bröwn fox jùmps over the lazy dog! ";
 
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .addByteArray(byteArray)
             .addDouble(d)
             .addInteger(i)
@@ -328,12 +328,12 @@ public class MarshalTest {
 
     @Test(expected=NullPointerException.class)
     public void testAddString__null() {
-        new Marshal.Builder().addString(null).build();
+        Marshal.builder().addString(null).build();
     }
 
     @Test(expected=NullPointerException.class)
     public void testAddMarshal__null() {
-        new Marshal.Builder().addMarshal(null).build();
+        Marshal.builder().addMarshal(null).build();
     }
 
     @Test
@@ -346,7 +346,7 @@ public class MarshalTest {
         String s = " Thë quíck bröwn fox jùmps over the lazy dog! ";
         byte b = (byte)0x80;
 
-        Marshal input = new Marshal.Builder()
+        Marshal input = Marshal.builder()
             .addByteArray(byteArray)
             .addDouble(d)
             .addInteger(i)
@@ -358,7 +358,7 @@ public class MarshalTest {
             .build();
 
         ByteArray mBytes = input.toByteArray();
-        Marshal m = new Marshal(mBytes);
+        Marshal m = Marshal.fromBytes(mBytes);
 
         assertEquals(8, m.size());
 
@@ -426,13 +426,13 @@ public class MarshalTest {
         byte b1 = (byte)0x80;
         byte b2 = (byte)0x81;
 
-        Marshal input = new Marshal.Builder()
+        Marshal input = Marshal.builder()
             .addByte(b1)
             .addByte(b2)
             .build();
 
         ByteArray mBytes = input.toByteArray();
-        Marshal m = new Marshal(mBytes);
+        Marshal m = Marshal.fromBytes(mBytes);
 
         assertEquals(2, m.size());
 
@@ -449,7 +449,7 @@ public class MarshalTest {
         long l = Marshal.SEPARATOR;
         byte b = Marshal.SEPARATOR;
 
-        Marshal input = new Marshal.Builder()
+        Marshal input = Marshal.builder()
             .addByteArray(byteArray)
             .addDouble(d)
             .addInteger(i)
@@ -458,7 +458,7 @@ public class MarshalTest {
             .build();
 
         ByteArray mBytes = input.toByteArray();
-        Marshal m = new Marshal(mBytes);
+        Marshal m = Marshal.fromBytes(mBytes);
 
         assertEquals(5, m.size());
 
@@ -479,7 +479,7 @@ public class MarshalTest {
         long l = 123456789012345678l;
         String s = " Thë quíck bröwn fox jùmps over the lazy dog! ";
 
-        Marshal embedded = new Marshal.Builder()
+        Marshal embedded = Marshal.builder()
             .addByteArray(byteArray)
             .addDouble(d)
             .addInteger(i)
@@ -487,7 +487,7 @@ public class MarshalTest {
             .addString(s)
             .build();
 
-        Marshal input = new Marshal.Builder()
+        Marshal input = Marshal.builder()
             .addByteArray(byteArray)
             .addDouble(d)
             .addInteger(i)
@@ -497,7 +497,7 @@ public class MarshalTest {
             .build();
 
         ByteArray mBytes = input.toByteArray();
-        Marshal m = new Marshal(mBytes);
+        Marshal m = Marshal.fromBytes(mBytes);
 
         assertEquals(6, m.size());
 
@@ -527,22 +527,22 @@ public class MarshalTest {
         long l = 123456789012345678l;
         String s = " Thë quíck bröwn fox jùmps over the lazy dog! ";
 
-        Marshal input1 = new Marshal.Builder()
+        Marshal input1 = Marshal.builder()
             .addByteArray(byteArray)
             .addDouble(d)
             .addInteger(i)
             .build();
-        Marshal input2 = new Marshal.Builder()
+        Marshal input2 = Marshal.builder()
             .addLong(l)
             .addString(s)
             .build();
 
-        Marshal input = new Marshal.Builder(input1)
+        Marshal input = Marshal.builder(input1)
             .appendMarshal(input2)
             .build();
 
         ByteArray mBytes = input.toByteArray();
-        Marshal m = new Marshal(mBytes);
+        Marshal m = Marshal.fromBytes(mBytes);
 
         assertEquals(5, m.size());
 
@@ -563,23 +563,23 @@ public class MarshalTest {
         long l = 123456789012345678l;
         String s = " Thë quíck bröwn fox jùmps over the lazy dog! ";
 
-        Marshal input1 = new Marshal.Builder()
+        Marshal input1 = Marshal.builder()
             .addByteArray(byteArray)
             .addDouble(d)
             .addInteger(i)
             .build();
-        Marshal input2 = new Marshal.Builder()
+        Marshal input2 = Marshal.builder()
             .addLong(l)
             .addString(s)
             .build();
 
-        Marshal input = new Marshal.Builder()
+        Marshal input = Marshal.builder()
             .appendMarshal(input1)
             .appendMarshal(input2)
             .build();
 
         ByteArray mBytes = input.toByteArray();
-        Marshal m = new Marshal(mBytes);
+        Marshal m = Marshal.fromBytes(mBytes);
 
         assertEquals(5, m.size());
 
@@ -593,25 +593,25 @@ public class MarshalTest {
 
     @Test
     public void testSerializeDeserialize__empty() {
-        Marshal input = new Marshal.Builder().build();
+        Marshal input = Marshal.builder().build();
 
         ByteArray mBytes = input.toByteArray();
         assertNotNull(mBytes);
 
-        Marshal m = new Marshal(mBytes);
+        Marshal m = Marshal.fromBytes(mBytes);
         assertEquals(0, m.size());
     }
 
     @Test
     public void testSerializeDeserialize__emptyEmbedded() {
-        Marshal input = new Marshal.Builder()
-            .addMarshal(new Marshal.Builder().build())
-            .addMarshal(new Marshal.Builder().build())
-            .addMarshal(new Marshal.Builder().build())
+        Marshal input = Marshal.builder()
+            .addMarshal(Marshal.builder().build())
+            .addMarshal(Marshal.builder().build())
+            .addMarshal(Marshal.builder().build())
             .build();
 
         ByteArray mBytes = input.toByteArray();
-        Marshal m = new Marshal(mBytes);
+        Marshal m = Marshal.fromBytes(mBytes);
 
         assertEquals(3, m.size());
 
@@ -622,14 +622,14 @@ public class MarshalTest {
 
     @Test
     public void testSerializeDeserialize__emptyString() {
-        Marshal input = new Marshal.Builder()
+        Marshal input = Marshal.builder()
             .addString("")
             .addString("")
             .addString("")
             .build();
 
         ByteArray mBytes = input.toByteArray();
-        Marshal m = new Marshal(mBytes);
+        Marshal m = Marshal.fromBytes(mBytes);
 
         assertEquals(3, m.size());
 
@@ -640,13 +640,13 @@ public class MarshalTest {
 
     @Test
     public void testDeserialize__nullByteArray() {
-        Marshal m = new Marshal((ByteArray)null);
+        Marshal m = Marshal.fromBytes((ByteArray)null);
         assertEquals(0, m.size());
     }
 
     @Test
     public void testDeserialize__nullBytes() {
-        Marshal m = new Marshal((byte[])null);
+        Marshal m = Marshal.fromBytes((byte[])null);
         assertEquals(0, m.size());
     }
 
@@ -655,7 +655,7 @@ public class MarshalTest {
         byte[] bytes = { (byte)0xFD, 1, 2, 3, 4 };
         ByteArray byteArray = new ByteArray(bytes);
 
-        Marshal m = new Marshal(byteArray);
+        Marshal m = Marshal.fromBytes(byteArray);
         assertEquals(0, m.size());
     }
 
@@ -668,7 +668,7 @@ public class MarshalTest {
         long l = 123456789012345678l;
         String s = " Thë quíck bröwn fox jùmps over the lazy dog! ";
 
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .addByteArray(byteArray)
             .addDouble(d)
             .addInteger(i)
@@ -699,7 +699,7 @@ public class MarshalTest {
         long l = 123456789012345678l;
         String s = " Thë quíck bröwn fox jùmps over the lazy dog! ";
 
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .addByteArray(byteArray)
             .addDouble(d)
             .addInteger(i)
@@ -729,7 +729,7 @@ public class MarshalTest {
         long l = 123456789012345678l;
         String s = " Thë quíck bröwn fox jùmps over the lazy dog! ";
 
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .addByteArray(byteArray)
             .addDouble(d)
             .addInteger(i)
@@ -750,18 +750,18 @@ public class MarshalTest {
 
     @Test
     public void testEmptyConstruction() {
-        assertSame(Marshal.EMPTY, new Marshal.Builder().build());
+        assertSame(Marshal.EMPTY, Marshal.builder().build());
     }
 
     @Test
     public void testPrefixUnterminated() {
-        Marshal m1 = new Marshal.Builder()
+        Marshal m1 = Marshal.builder()
             .addString("a")
             .addString("cat")
             .addString("named")
             .addString("kitty")
             .build();
-        Marshal m2 = new Marshal.Builder()
+        Marshal m2 = Marshal.builder()
             .addString("a")
             .addString("cat")
             .addString("named")
@@ -808,14 +808,14 @@ public class MarshalTest {
 
     @Test
     public void testPrefixTerminated() {
-        Marshal m1 = new Marshal.Builder()
+        Marshal m1 = Marshal.builder()
             .addString("a")
             .addString("cat")
             .addString("named")
             .addString("kitty")
             .addString("something here")
             .build();
-        Marshal m2 = new Marshal.Builder()
+        Marshal m2 = Marshal.builder()
             .addString("a")
             .addString("cat")
             .addString("named")
@@ -871,7 +871,7 @@ public class MarshalTest {
 
     @Test
     public void testPrefixUnterminated__emptyMarshal() {
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .addMarshal(Marshal.EMPTY)
             .build();
 
@@ -888,7 +888,7 @@ public class MarshalTest {
 
     @Test
     public void testPrefixTerminated__emptyMarshal() {
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .addMarshal(Marshal.EMPTY)
             .build();
 
@@ -907,7 +907,7 @@ public class MarshalTest {
 
     @Test
     public void testPrefixUnterminated__empty() {
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .build();
 
         byte[] prefix = m.prefixUnterminatedBytes(0);
@@ -916,7 +916,7 @@ public class MarshalTest {
 
     @Test
     public void testPrefixUnterminated__nothingSelected() {
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .addString("foo")
             .build();
 
@@ -926,7 +926,7 @@ public class MarshalTest {
 
     @Test
     public void testPrefixTerminated__empty() {
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .build();
 
         byte[] prefix = m.prefixTerminatedBytes(0);
@@ -935,7 +935,7 @@ public class MarshalTest {
 
     @Test
     public void testPrefixTerminated__nothingSelected() {
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .addString("foo")
             .build();
 
@@ -973,9 +973,9 @@ public class MarshalTest {
             (byte)107, (byte)105, (byte)116, (byte)116, (byte)121
         };
 
-        Marshal output = new Marshal(input);
+        Marshal output = Marshal.fromBytes(input);
 
-        Marshal expected = new Marshal.Builder()
+        Marshal expected = Marshal.builder()
             .addString("a")
             .addString("cat")
             .addString("named")
@@ -1000,7 +1000,7 @@ public class MarshalTest {
         String s = " Thë quíck bröwn fox jùmps over the lazy dog! ";
         byte b = (byte)0x80;
 
-        Marshal m = new Marshal.Builder()
+        Marshal m = Marshal.builder()
             .addByteArray(byteArray)
             .addDouble(d)
             .addInteger(i)
