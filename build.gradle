@@ -96,3 +96,7 @@ project(":marshal-mapreduce") {
         compile group: "org.apache.hadoop", name: "hadoop-client", version: "2.0.0-mr1-cdh4.1.0"
     }
 }
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.11'
+}
