@@ -1,4 +1,4 @@
-package com.fullcontact.hbase.marshal;
+package com.fullcontact.marshal;
 
 import java.io.DataInput;
 import java.io.DataOutput;

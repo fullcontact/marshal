@@ -1,6 +1,6 @@
-package com.fullcontact.hbase.marshal.mapreduce;
+package com.fullcontact.marshal.mapreduce;
 
-import com.fullcontact.hbase.marshal.Marshal;
+import com.fullcontact.marshal.Marshal;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
