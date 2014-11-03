@@ -1,4 +1,4 @@
-package com.fullcontact.hbase.marshal;
+package com.fullcontact.marshal;
 
 /**
  * An exception for use by a Marshal. Other classes can also use this exception to indicate

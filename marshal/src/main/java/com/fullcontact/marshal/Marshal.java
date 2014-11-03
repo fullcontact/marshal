@@ -1,4 +1,4 @@
-package com.fullcontact.hbase.marshal;
+package com.fullcontact.marshal;
 
 import com.google.common.annotations.VisibleForTesting;
 
