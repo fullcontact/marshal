@@ -16,12 +16,12 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Marshal is a system for performing custom serialization to/from byte arrays.
  *
  * The serialization is done in a byte-comparable manner; this allows the resulting arrays to be
- * lexographically compared. This is useful in systems such as HBase, which only deals with byte
+ * lexicographically compared. This is useful in systems such as HBase, which only deals with byte
  * arrays. A Marshal is similar to a list of primitive types or a limited set of objects (of
  * potentially different types) backed by objects serialized in a {@link ByteArray}. Marshals may
- * include other marshals or byte arrays as a nested component. Type information is stored for
- * each object, allowing for typed reconstruction of known types, pretty printing, and stable sort
- * orders without mixing of types in the sorting.
+ * include other marshals or byte arrays as a nested component. Type information is stored for each
+ * object, allowing for typed reconstruction of known types, pretty printing, and stable sort orders
+ * without mixing of types in the sorting.
  *
  * The serialized form of a marshal looks like the following:
  *  [type code][entry data][separator][type code][entry data] ... [type code][entry data][separator]
@@ -254,7 +254,7 @@ public final class Marshal implements Comparable<Marshal> {
         /**
          * Appends the given marshal to the marshal under construction. This equivalent to calling
          * add for every entry in the provided marshal. This differs from {@link #addMarshal} in
-         * that addMarshal will add a Marshal as a sub-element, while this method exgtends the
+         * that addMarshal will add a Marshal as a sub-element, while this method extends the
          * current data structure with the contents of another Marshal.
          */
         public Builder appendMarshal(Marshal m) {
@@ -276,9 +276,6 @@ public final class Marshal implements Comparable<Marshal> {
      */
     private ImmutableList<Entry> contents;
 
-    /**
-     * Create a new marshal from a buidler.
-     */
     private Marshal(ImmutableList<Entry> contents) {
         this.contents = contents;
     }
@@ -300,7 +297,7 @@ public final class Marshal implements Comparable<Marshal> {
     }
 
     /**
-     * Reads a marshal from the serialized lexographic marshal in the byte array.
+     * Reads a marshal from the serialized lexicographic marshal in the byte array.
      */
     public static Marshal fromBytes(ByteArray bytes, MarshalCompatibilityMode compatibilityMode)
             throws MarshalException {
@@ -367,7 +364,7 @@ public final class Marshal implements Comparable<Marshal> {
     }
 
     /**
-     * Reads a marshal from the serialized non-lexographic encoded data from datainput.
+     * Reads a marshal from the serialized non-lexicographic encoded data from datainput.
      */
     public static Marshal read(DataInput dataInput, MarshalCompatibilityMode compatibilityMode)
             throws IOException {

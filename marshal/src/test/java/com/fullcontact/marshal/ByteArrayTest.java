@@ -161,7 +161,7 @@ public class ByteArrayTest {
     }
 
     @Test
-    public void testCompareTo__compareLexographical() {
+    public void testCompareTo__compareLexicographical() {
         byte[] b1 = { 0, 1, 2 };
         byte[] b2 = { 0, 1, 2, 3 };
         ByteArray a1 = new ByteArray(b1);
@@ -248,7 +248,7 @@ public class ByteArrayTest {
     }
 
     @Test
-    public void testCompareTo__compareLexographical__offsetLeft() {
+    public void testCompareTo__compareLexicographical__offsetLeft() {
         byte[] b1 = { 22, 0, 1, 2 };
         byte[] b2 = { 0, 1, 2, 3 };
         ByteArray a1 = new ByteArray(b1).from(1);
@@ -258,7 +258,7 @@ public class ByteArrayTest {
     }
 
     @Test
-    public void testCompareTo__compareLexographical__offsetRight() {
+    public void testCompareTo__compareLexicographical__offsetRight() {
         byte[] b1 = { 0, 1, 2 };
         byte[] b2 = { 22, 0, 1, 2, 3 };
         ByteArray a1 = new ByteArray(b1);
@@ -345,7 +345,7 @@ public class ByteArrayTest {
     }
 
     @Test
-    public void testCompareTo__compareLexographical__shortLeft() {
+    public void testCompareTo__compareLexicographical__shortLeft() {
         byte[] b1 = { 0, 1, 2, 22 };
         byte[] b2 = { 0, 1, 2, 3 };
         ByteArray a1 = new ByteArray(b1).to(3);
@@ -355,7 +355,7 @@ public class ByteArrayTest {
     }
 
     @Test
-    public void testCompareTo__compareLexographical__shortRight() {
+    public void testCompareTo__compareLexicographical__shortRight() {
         byte[] b1 = { 0, 1, 2 };
         byte[] b2 = { 0, 1, 2, 3, 22 };
         ByteArray a1 = new ByteArray(b1);
@@ -434,7 +434,7 @@ public class ByteArrayTest {
     }
 
     @Test
-    public void testCompareTo__compareLexographical__subsection() {
+    public void testCompareTo__compareLexicographical__subsection() {
         byte[] b1 = { 22, 0, 1, 2, 22 };
         byte[] b2 = { 0, 1, 2, 3 };
         ByteArray a1 = new ByteArray(b1).from(1).to(3);

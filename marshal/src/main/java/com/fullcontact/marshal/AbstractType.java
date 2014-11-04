@@ -11,7 +11,7 @@ import java.io.IOException;
  */
 abstract class AbstractType<T> {
     /**
-     * Marshals the given type into a byte array. The ordering should be byte lexographical if
+     * Marshals the given type into a byte array. The ordering should be byte lexicographical if
      * ordering is supported.
      */
     public abstract ByteArray marshal(T object);
@@ -22,7 +22,7 @@ abstract class AbstractType<T> {
     public abstract T demarshal(ByteArray data) throws MarshalException;
 
     /**
-     * Write the current value to the data output. This need not be lexographical.
+     * Write the current value to the data output. This need not be lexicographical.
      */
     public abstract void write(T object, DataOutput dataOutput) throws IOException;
 
