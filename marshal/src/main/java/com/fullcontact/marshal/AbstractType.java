@@ -19,7 +19,7 @@ abstract class AbstractType<T> {
     /**
      * Demarshals the byte array into the given object type.
      */
-    public abstract T demarshal(ByteArray data);
+    public abstract T demarshal(ByteArray data) throws MarshalException;
 
     /**
      * Write the current value to the data output. This need not be lexographical.

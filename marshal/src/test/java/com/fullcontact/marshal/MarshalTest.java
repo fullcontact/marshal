@@ -177,7 +177,6 @@ public class MarshalTest {
         assertEquals(0, Marshal.findSeparator(a, (byte)0));
     }
 
-
     @Test
     public void testFindSeparator__noSeparator() {
         byte[] bytes = { 0, 1, 2, 3 };
@@ -186,7 +185,7 @@ public class MarshalTest {
     }
 
     @Test
-    public void testGetAt() {
+    public void testGetAt() throws Exception {
         byte[] bytes = { 0, 1, 2, 3, 4, 5 };
         ByteArray byteArray = new ByteArray(bytes);
         double d = -3.14d;
@@ -218,7 +217,7 @@ public class MarshalTest {
     }
 
     @Test(expected=MarshalException.class)
-    public void testGetAt__invalidType__byte() {
+    public void testGetAt__invalidType__byte() throws Exception {
         int i = 22;
 
         Marshal m = Marshal.builder()
@@ -229,7 +228,7 @@ public class MarshalTest {
     }
 
     @Test(expected=MarshalException.class)
-    public void testGetAt__invalidSize__byte() {
+    public void testGetAt__invalidSize__byte() throws Exception {
         byte[] bytes = { 0, 1, 2, 3, 4, 5 };
         ByteArray byteArray = new ByteArray(bytes);
 
@@ -241,7 +240,7 @@ public class MarshalTest {
     }
 
     @Test(expected=MarshalException.class)
-    public void testGetAt__invalidType__byteArray() {
+    public void testGetAt__invalidType__byteArray() throws Exception {
         int i = 22;
 
         Marshal m = Marshal.builder()
@@ -252,7 +251,7 @@ public class MarshalTest {
     }
 
     @Test(expected=MarshalException.class)
-    public void testGetAt__invalidType__double() {
+    public void testGetAt__invalidType__double() throws Exception {
         int i = 22;
 
         Marshal m = Marshal.builder()
@@ -263,7 +262,7 @@ public class MarshalTest {
     }
 
     @Test(expected=MarshalException.class)
-    public void testGetAt__invalidType__integer() {
+    public void testGetAt__invalidType__integer() throws Exception {
         double d = 3.14;
 
         Marshal m = Marshal.builder()
@@ -274,7 +273,7 @@ public class MarshalTest {
     }
 
     @Test(expected=MarshalException.class)
-    public void testGetAt__invalidType__long() {
+    public void testGetAt__invalidType__long() throws Exception {
         int i = 22;
 
         Marshal m = Marshal.builder()
@@ -285,7 +284,7 @@ public class MarshalTest {
     }
 
     @Test(expected=MarshalException.class)
-    public void testGetAt__invalidType__string() {
+    public void testGetAt__invalidType__string() throws Exception {
         int i = 22;
 
         Marshal m = Marshal.builder()
@@ -296,7 +295,7 @@ public class MarshalTest {
     }
 
     @Test(expected=MarshalException.class)
-    public void testGetAt__invalidType__marshall() {
+    public void testGetAt__invalidType__marshall() throws Exception {
         int i = 22;
 
         Marshal m = Marshal.builder()
@@ -307,7 +306,7 @@ public class MarshalTest {
     }
 
     @Test(expected=IndexOutOfBoundsException.class)
-    public void testGetAt__invalidPosition() {
+    public void testGetAt__invalidPosition() throws Exception {
         byte[] bytes = { 0, 1, 2, 3, 4, 5 };
         ByteArray byteArray = new ByteArray(bytes);
         double d = -3.14d;
@@ -329,17 +328,17 @@ public class MarshalTest {
     }
 
     @Test(expected=NullPointerException.class)
-    public void testAddString__null() {
+    public void testAddString__null() throws Exception {
         Marshal.builder().addString(null).build();
     }
 
     @Test(expected=NullPointerException.class)
-    public void testAddMarshal__null() {
+    public void testAddMarshal__null() throws Exception {
         Marshal.builder().addMarshal(null).build();
     }
 
     @Test
-    public void testSerializeDeserialize__basic() {
+    public void testSerializeDeserialize__basic() throws Exception {
         byte[] bytes = { 0, 1, 2, 3, 4, 5 };
         ByteArray byteArray = new ByteArray(bytes);
         double d = -3.14d;
@@ -424,7 +423,7 @@ public class MarshalTest {
     }
 
     @Test
-    public void testSerializeDeserialize__doubleByte() {
+    public void testSerializeDeserialize__doubleByte() throws Exception {
         byte b1 = (byte)0x80;
         byte b2 = (byte)0x81;
 
@@ -443,7 +442,7 @@ public class MarshalTest {
     }
 
     @Test
-    public void testSerializeDeserialize__separator() {
+    public void testSerializeDeserialize__separator() throws Exception {
         byte[] bytes = { Marshal.SEPARATOR, Marshal.SEPARATOR };
         ByteArray byteArray = new ByteArray(bytes);
         double d = Marshal.SEPARATOR;
@@ -473,7 +472,7 @@ public class MarshalTest {
     }
 
     @Test
-    public void testSerializeDeserialize__embedded() {
+    public void testSerializeDeserialize__embedded() throws Exception {
         byte[] bytes = { 0, 0, 2, 2, 4, 4 };
         ByteArray byteArray = new ByteArray(bytes);
         double d = -3.14d;
@@ -521,7 +520,7 @@ public class MarshalTest {
     }
 
     @Test
-    public void testSerializeDeserialize__append() {
+    public void testSerializeDeserialize__append() throws Exception {
         byte[] bytes = { 0, 1, 2, 3, 4, 5 };
         ByteArray byteArray = new ByteArray(bytes);
         double d = -3.14d;
@@ -557,7 +556,7 @@ public class MarshalTest {
     }
 
     @Test
-    public void testSerializeDeserialize__appendToEmpty() {
+    public void testSerializeDeserialize__appendToEmpty() throws Exception {
         byte[] bytes = { 0, 1, 2, 3, 4, 5 };
         ByteArray byteArray = new ByteArray(bytes);
         double d = -3.14d;
@@ -594,7 +593,7 @@ public class MarshalTest {
     }
 
     @Test
-    public void testSerializeDeserialize__empty() {
+    public void testSerializeDeserialize__empty() throws Exception {
         Marshal input = Marshal.builder().build();
 
         ByteArray mBytes = input.toByteArray();
@@ -605,7 +604,7 @@ public class MarshalTest {
     }
 
     @Test
-    public void testSerializeDeserialize__emptyEmbedded() {
+    public void testSerializeDeserialize__emptyEmbedded() throws Exception {
         Marshal input = Marshal.builder()
             .addMarshal(Marshal.builder().build())
             .addMarshal(Marshal.builder().build())
@@ -623,7 +622,7 @@ public class MarshalTest {
     }
 
     @Test
-    public void testSerializeDeserialize__emptyString() {
+    public void testSerializeDeserialize__emptyString() throws Exception {
         Marshal input = Marshal.builder()
             .addString("")
             .addString("")
@@ -641,19 +640,19 @@ public class MarshalTest {
     }
 
     @Test
-    public void testDeserialize__nullByteArray() {
+    public void testDeserialize__nullByteArray() throws Exception {
         Marshal m = Marshal.fromBytes((ByteArray)null);
         assertEquals(0, m.size());
     }
 
     @Test
-    public void testDeserialize__nullBytes() {
+    public void testDeserialize__nullBytes() throws Exception {
         Marshal m = Marshal.fromBytes((byte[])null);
         assertEquals(0, m.size());
     }
 
     @Test(expected=MarshalException.class)
-    public void testDeserialize__invalid() {
+    public void testDeserialize__invalid() throws Exception {
         byte[] bytes = { (byte)0xFD, 1, 2, 3, 4 };
         ByteArray byteArray = new ByteArray(bytes);
 
@@ -662,7 +661,7 @@ public class MarshalTest {
     }
 
     @Test
-    public void testGetAt__subrange() {
+    public void testGetAt__subrange() throws Exception {
         byte[] bytes = { 0, 1, 2, 3, 4, 5 };
         ByteArray byteArray = new ByteArray(bytes);
         double d = -3.14d;
@@ -693,7 +692,7 @@ public class MarshalTest {
     }
 
     @Test
-    public void testGetAt__from() {
+    public void testGetAt__from() throws Exception {
         byte[] bytes = { 0, 1, 2, 3, 4, 5 };
         ByteArray byteArray = new ByteArray(bytes);
         double d = -3.14d;
@@ -723,7 +722,7 @@ public class MarshalTest {
     }
 
     @Test
-    public void testGetAt__to() {
+    public void testGetAt__to() throws Exception {
         byte[] bytes = { 0, 1, 2, 3, 4, 5 };
         ByteArray byteArray = new ByteArray(bytes);
         double d = -3.14d;
@@ -946,7 +945,7 @@ public class MarshalTest {
     }
 
     @Test
-    public void testDeserialize_legacyNoTerminator() {
+    public void testDeserialize_legacyNoTerminator() throws Exception {
         byte[] input = {
             // string
             (byte)5,

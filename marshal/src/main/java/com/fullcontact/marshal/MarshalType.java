@@ -21,7 +21,7 @@ final class MarshalType extends AbstractType<Marshal> {
     }
 
     @Override
-    public Marshal demarshal(ByteArray data) {
+    public Marshal demarshal(ByteArray data) throws MarshalException {
         return Marshal.fromBytes(data);
     }
 
