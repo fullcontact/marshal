@@ -98,4 +98,49 @@ public class IOUtilTest {
         byte[] bytes = { -1, -1, -1, -1, 112 };
         IOUtil.readVarInt(new DataInputStream(new ByteArrayInputStream(bytes)));
     }
+
+    @Test
+    public void testUtf() throws IOException {
+        String str = "aeiouáéíóúäëïöüabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" +
+            "-+={}[]()<> `'!@#$%^&*:;/\\|.,\u2603\u0000";
+        for(int i = 1; i <= str.length(); i++) {
+            String s = str.substring(0, i);
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream(8192);
+            IOUtil.writeUtf(s, new DataOutputStream(baos));
+
+            String decoded = IOUtil.readUtf(
+                    new DataInputStream(new ByteArrayInputStream(baos.toByteArray())));
+            assertEquals(s, decoded);
+        }
+    }
+
+    @Test
+    public void testUtf__long() throws IOException {
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < Math.pow(2, 16) + 50; i++) {
+            sb.append("1");
+        }
+
+        String s = sb.toString();
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(8192);
+        IOUtil.writeUtf(s, new DataOutputStream(baos));
+
+        String decoded = IOUtil.readUtf(
+                new DataInputStream(new ByteArrayInputStream(baos.toByteArray())));
+        assertEquals(s, decoded);
+    }
+
+    @Test
+    public void testUtf__empty() throws IOException {
+        String s = "";
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(8192);
+        IOUtil.writeUtf(s, new DataOutputStream(baos));
+
+        String decoded = IOUtil.readUtf(
+                new DataInputStream(new ByteArrayInputStream(baos.toByteArray())));
+        assertEquals(s, decoded);
+    }
 }

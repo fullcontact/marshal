@@ -16,6 +16,10 @@ enum EntryType {
     LONG              ((byte)0x04, LongType.INSTANCE),
     STRING            ((byte)0x05, StringType.INSTANCE),
     MARSHAL           ((byte)0x06, MarshalType.INSTANCE),
+    // a "fake" type
+    // this type cannot be greated directly, but is used in conjuction with a compatibility mode
+    // to deserialize old data
+    STRING_LEGACY     ((byte)250,  LegacyStringType.INSTANCE),
     // SEPARATOR (0xFE) is reserved and cannot be used
     // formally the empty Marshal indicator; now left for compatibility
     LEGACY_EMPTY      ((byte)0xFF, null);
