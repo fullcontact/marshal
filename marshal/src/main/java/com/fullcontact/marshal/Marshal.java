@@ -38,7 +38,7 @@ public final class Marshal implements Comparable<Marshal> {
     private static final ByteArray SEPARATOR_BYTE_ARRAY = new ByteArray(SEPARATOR_ARRAY);
 
     // an empty Marshal
-    private static final Marshal EMPTY = new Marshal(ImmutableList.<Entry>of());
+    public static final Marshal EMPTY = new Marshal(ImmutableList.<Entry>of());
 
     /**
      * An entry in the marshal.
