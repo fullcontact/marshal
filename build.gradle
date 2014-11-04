@@ -2,8 +2,8 @@ configure(subprojects) {
     apply from:"file:../cobertura.gradle"
 }
 
-def GROUP_ID = "com.fullcontact.hbase"
-def VERSION = "0.1"
+def GROUP_ID = "com.fullcontact.marshal"
+def VERSION = "1.0.0"
 
 subprojects {
     apply plugin: "base"
@@ -95,4 +95,8 @@ project(":marshal-mapreduce") {
 
         compile group: "org.apache.hadoop", name: "hadoop-client", version: "2.0.0-mr1-cdh4.1.0"
     }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.11'
 }

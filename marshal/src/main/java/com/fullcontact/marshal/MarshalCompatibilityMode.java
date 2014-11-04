@@ -1,4 +1,4 @@
-package com.fullcontact.hbase.marshal;
+package com.fullcontact.marshal;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -11,6 +11,7 @@ import java.util.Map;
  * @author Brandon Vargo
  */
 public enum MarshalCompatibilityMode {
+    // sherlock HBase
     SHERLOCK(new ImmutableMap.Builder<Byte, Byte>()
         // byte array
         .put((byte)0, (byte)1)
@@ -26,6 +27,12 @@ public enum MarshalCompatibilityMode {
         .put((byte)5, (byte)6)
         // empty
         .put((byte)6, (byte)0xFF)
+        .build()),
+
+    // strings encoded using pre-1.0 marshal library
+    LEGACY_STRINGS(new ImmutableMap.Builder<Byte, Byte>()
+        // "move" strings to a fake type, legacy strings, so that deserialization works
+        .put(EntryType.STRING.getTypeCode(), EntryType.STRING_LEGACY.getTypeCode())
         .build());
 
     // type conversions

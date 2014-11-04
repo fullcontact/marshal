@@ -1,4 +1,4 @@
-package com.fullcontact.hbase.marshal;
+package com.fullcontact.marshal;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -21,8 +21,8 @@ final class MarshalType extends AbstractType<Marshal> {
     }
 
     @Override
-    public Marshal demarshal(ByteArray data) {
-        return new Marshal(data);
+    public Marshal demarshal(ByteArray data) throws MarshalException {
+        return Marshal.fromBytes(data);
     }
 
     @Override
