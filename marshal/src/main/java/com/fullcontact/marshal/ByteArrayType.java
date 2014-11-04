@@ -28,13 +28,13 @@ final class ByteArrayType extends AbstractType<ByteArray> {
     @Override
     public void write(ByteArray byteArray, DataOutput dataOutput) throws IOException {
         byte[] bytes = byteArray.toArray();
-        dataOutput.writeInt(bytes.length);
+        IOUtil.writeVarInt(bytes.length, dataOutput);
         dataOutput.write(bytes);
     }
 
     @Override
     public ByteArray read(DataInput dataInput) throws IOException {
-        int length = dataInput.readInt();
+        int length = IOUtil.readVarInt(dataInput);
         byte[] bytes = new byte[length];
         dataInput.readFully(bytes);
         return new ByteArray(bytes);
