@@ -15,6 +15,8 @@ import static org.junit.Assert.*;
  */
 @RunWith(JUnit4.class)
 public class MarshalTest {
+    private static final Marshal EMPTY = Marshal.builder().build();
+
     @Test
     public void testEscape() {
         byte[] original = { 0, 1, 2, 3 };
@@ -200,7 +202,7 @@ public class MarshalTest {
             .addLong(l)
             .addString(s)
             .addByte(b)
-            .addMarshal(Marshal.EMPTY)
+            .addMarshal(EMPTY)
             .build();
 
         assertEquals(7, m.size());
@@ -212,7 +214,7 @@ public class MarshalTest {
         assertEquals(l, m.getLongAt(3));
         assertEquals(s, m.getStringAt(4));
         assertEquals(b, m.getByteAt(5));
-        assertEquals(Marshal.EMPTY, m.getMarshalAt(6));
+        assertEquals(EMPTY, m.getMarshalAt(6));
     }
 
     @Test(expected=MarshalException.class)
@@ -352,9 +354,9 @@ public class MarshalTest {
             .addInteger(i)
             .addLong(l)
             .addString(s)
-            .addMarshal(Marshal.EMPTY)
+            .addMarshal(EMPTY)
             .addByte(b)
-            .addMarshal(Marshal.EMPTY)
+            .addMarshal(EMPTY)
             .build();
 
         ByteArray mBytes = input.toByteArray();
@@ -368,9 +370,9 @@ public class MarshalTest {
         assertEquals(i, m.getIntegerAt(2));
         assertEquals(l, m.getLongAt(3));
         assertEquals(s, m.getStringAt(4));
-        assertEquals(Marshal.EMPTY, m.getMarshalAt(5));
+        assertEquals(EMPTY, m.getMarshalAt(5));
         assertEquals(b, m.getByteAt(6));
-        assertEquals(Marshal.EMPTY, m.getMarshalAt(7));
+        assertEquals(EMPTY, m.getMarshalAt(7));
 
         // ensure encoded format is correct
         byte[] expected = {
@@ -615,9 +617,9 @@ public class MarshalTest {
 
         assertEquals(3, m.size());
 
-        assertEquals(Marshal.EMPTY, m.getMarshalAt(0));
-        assertEquals(Marshal.EMPTY, m.getMarshalAt(1));
-        assertEquals(Marshal.EMPTY, m.getMarshalAt(2));
+        assertEquals(EMPTY, m.getMarshalAt(0));
+        assertEquals(EMPTY, m.getMarshalAt(1));
+        assertEquals(EMPTY, m.getMarshalAt(2));
     }
 
     @Test
@@ -750,7 +752,7 @@ public class MarshalTest {
 
     @Test
     public void testEmptyConstruction() {
-        assertSame(Marshal.EMPTY, Marshal.builder().build());
+        assertSame(EMPTY, Marshal.builder().build());
     }
 
     @Test
@@ -872,7 +874,7 @@ public class MarshalTest {
     @Test
     public void testPrefixUnterminated__emptyMarshal() {
         Marshal m = Marshal.builder()
-            .addMarshal(Marshal.EMPTY)
+            .addMarshal(EMPTY)
             .build();
 
         byte[] prefix = m.prefixUnterminatedBytes(1);
@@ -889,7 +891,7 @@ public class MarshalTest {
     @Test
     public void testPrefixTerminated__emptyMarshal() {
         Marshal m = Marshal.builder()
-            .addMarshal(Marshal.EMPTY)
+            .addMarshal(EMPTY)
             .build();
 
         byte[] prefix = m.prefixTerminatedBytes(1);
