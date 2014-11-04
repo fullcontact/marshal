@@ -642,6 +642,13 @@ public final class Marshal implements Comparable<Marshal> {
         return this.contents.size();
     }
 
+    /**
+     * Whether the marshal is empty.
+     */
+    public boolean isEmpty() {
+        return this.contents.isEmpty();
+    }
+
     @Override
     public int compareTo(Marshal other) {
         ByteArray bytes1 = this.toByteArray();

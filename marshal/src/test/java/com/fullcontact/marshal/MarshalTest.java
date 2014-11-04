@@ -205,6 +205,7 @@ public class MarshalTest {
             .build();
 
         assertEquals(7, m.size());
+        assertFalse(m.isEmpty());
 
         // allow zero tolerance in the double comparison, since the representation should be exact
         assertArrayEquals(byteArray.toArray(), m.getByteArrayAt(0).toArray());
@@ -601,6 +602,7 @@ public class MarshalTest {
 
         Marshal m = Marshal.fromBytes(mBytes);
         assertEquals(0, m.size());
+        assertTrue(m.isEmpty());
     }
 
     @Test
@@ -643,12 +645,14 @@ public class MarshalTest {
     public void testDeserialize__nullByteArray() throws Exception {
         Marshal m = Marshal.fromBytes((ByteArray)null);
         assertEquals(0, m.size());
+        assertTrue(m.isEmpty());
     }
 
     @Test
     public void testDeserialize__nullBytes() throws Exception {
         Marshal m = Marshal.fromBytes((byte[])null);
         assertEquals(0, m.size());
+        assertTrue(m.isEmpty());
     }
 
     @Test(expected=MarshalException.class)
@@ -658,6 +662,7 @@ public class MarshalTest {
 
         Marshal m = Marshal.fromBytes(byteArray);
         assertEquals(0, m.size());
+        assertTrue(m.isEmpty());
     }
 
     @Test
