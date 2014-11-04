@@ -6,17 +6,25 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 
 /**
- * Type for String.
+ * A legacy string type.
+ *
+ * The Marshal encoding is idential to the current string. The DataInput/DataOutput encoding uses a
+ * length short instead of a varint, as in the current version of String.
+ *
+ * This type was original type 5for Marshals. However, since the Marshal serailization is the exact
+ * same between this and the current format, and there are few uses of the serialized
+ * DataInput/DataOutput, it would cause less breakage to demote this to a fake type ID and then use
+ * a compatibility mode to deserialize existing data where required.
  *
  * @author Brandon Vargo
  */
-final class StringType extends AbstractType<String> {
-    public static final StringType INSTANCE = new StringType();
+final class LegacyStringType extends AbstractType<String> {
+    public static final LegacyStringType INSTANCE = new LegacyStringType();
 
     private static final Charset CHARSET = Charset.forName("UTF-8");
 
     // singleton
-    private StringType() {}
+    private LegacyStringType() {}
 
     @Override
     public ByteArray marshal(String s) {
@@ -43,16 +51,16 @@ final class StringType extends AbstractType<String> {
 
     @Override
     public void write(String s, DataOutput dataOutput) throws IOException {
-        IOUtil.writeUtf(s, dataOutput);
+        dataOutput.writeUTF(s);
     }
 
     @Override
     public String read(DataInput dataInput) throws IOException {
-        return IOUtil.readUtf(dataInput);
+        return dataInput.readUTF();
     }
 
     @Override
     public String toString() {
-        return "StringType";
+        return "LegacyStringType";
     }
 }
