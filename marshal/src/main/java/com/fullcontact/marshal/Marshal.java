@@ -38,7 +38,7 @@ public final class Marshal implements Comparable<Marshal> {
     private static final ByteArray SEPARATOR_BYTE_ARRAY = new ByteArray(SEPARATOR_ARRAY);
 
     // an empty Marshal
-    private static final Marshal EMPTY = new Marshal(ImmutableList.<Entry>of());
+    public static final Marshal EMPTY = new Marshal(ImmutableList.<Entry>of());
 
     /**
      * An entry in the marshal.
@@ -640,6 +640,13 @@ public final class Marshal implements Comparable<Marshal> {
      */
     public int size() {
         return this.contents.size();
+    }
+
+    /**
+     * Whether the marshal is empty.
+     */
+    public boolean isEmpty() {
+        return this.contents.isEmpty();
     }
 
     @Override
