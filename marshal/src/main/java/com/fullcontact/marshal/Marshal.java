@@ -1,15 +1,14 @@
-package com.fullcontact.hbase.marshal;
+package com.fullcontact.marshal;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -17,12 +16,12 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Marshal is a system for performing custom serialization to/from byte arrays.
  *
  * The serialization is done in a byte-comparable manner; this allows the resulting arrays to be
- * lexographically compared. This is useful in systems such as HBase, which only deals with byte
+ * lexicographically compared. This is useful in systems such as HBase, which only deals with byte
  * arrays. A Marshal is similar to a list of primitive types or a limited set of objects (of
  * potentially different types) backed by objects serialized in a {@link ByteArray}. Marshals may
- * include other marshals or byte arrays as a nested component. Type information is stored for
- * each object, allowing for typed reconstruction of known types, pretty printing, and stable sort
- * orders without mixing of types in the sorting.
+ * include other marshals or byte arrays as a nested component. Type information is stored for each
+ * object, allowing for typed reconstruction of known types, pretty printing, and stable sort orders
+ * without mixing of types in the sorting.
  *
  * The serialized form of a marshal looks like the following:
  *  [type code][entry data][separator][type code][entry data] ... [type code][entry data][separator]
@@ -39,57 +38,7 @@ public final class Marshal implements Comparable<Marshal> {
     private static final ByteArray SEPARATOR_BYTE_ARRAY = new ByteArray(SEPARATOR_ARRAY);
 
     // an empty Marshal
-    private static final List<Entry> EMPTY_CONTENTS = Collections.emptyList();
-    public static final Marshal EMPTY = new Marshal(EMPTY_CONTENTS);
-
-    /**
-     * Known types allowed to be added to a marshal.
-     *
-     * Note that these values *cannot* be changed without breaking binary compatibility.
-     */
-    private static enum EntryType {
-        BYTE              ((byte)0x00, ByteType.INSTANCE),
-        BYTE_ARRAY        ((byte)0x01, ByteArrayType.INSTANCE),
-        DOUBLE            ((byte)0x02, DoubleType.INSTANCE),
-        INTEGER           ((byte)0x03, IntegerType.INSTANCE),
-        LONG              ((byte)0x04, LongType.INSTANCE),
-        STRING            ((byte)0x05, StringType.INSTANCE),
-        MARSHAL           ((byte)0x06, MarshalType.INSTANCE),
-        // SEPARATOR (0xFE) is reserved and cannot be used
-        // formally the empty Marshal indicator; now left for compatibility
-        LEGACY_EMPTY      ((byte)0xFF, null);
-
-        private final byte typeCode;
-        private final AbstractType<?> type;
-
-        private EntryType(byte typeCode, AbstractType<?> type) {
-            this.typeCode = typeCode;
-            this.type = type;
-        }
-
-        /**
-         * A single byte that indicates the type code for this entry type.
-         */
-        public byte getTypeCode() {
-            return typeCode;
-        }
-
-        public AbstractType<?> getType() {
-            return this.type;
-        }
-    }
-
-    /**
-     * Map of type code to entry type.
-     */
-    private static final Map<Byte, EntryType> entryTypeCodes;
-    static {
-        Map<Byte, EntryType> m = new HashMap<Byte, EntryType>();
-        for(EntryType type : EntryType.values()) {
-            m.put(type.getTypeCode(), type);
-        }
-        entryTypeCodes = Collections.unmodifiableMap(m);
-    }
+    private static final Marshal EMPTY = new Marshal(ImmutableList.<Entry>of());
 
     /**
      * An entry in the marshal.
@@ -114,10 +63,6 @@ public final class Marshal implements Comparable<Marshal> {
          * Creates an entry of the given type for the given field object.
          */
         public Entry(EntryType entryType, T fieldObject) {
-            if(entryType == null)
-                throw new MarshalException("Entry type not provided or was invalid.");
-            if(fieldObject == null)
-                throw new NullPointerException("Field object not provided; must be non-null.");
             this.entryType = entryType;
             this.fieldObject = fieldObject;
         }
@@ -126,17 +71,13 @@ public final class Marshal implements Comparable<Marshal> {
          * Private for use by {@link #fromBytes} and {@link #fromData}.
          */
         private Entry(EntryType entryType) {
-            if(entryType == null)
-                throw new MarshalException("Entry type not provided or was invalid.");
             this.entryType = entryType;
         }
 
         /**
          * Creates an entry from the given entry type and byte array.
          */
-        public static Entry fromBytes(EntryType entryType, ByteArray data) {
-            if(data == null)
-                throw new NullPointerException("Data not provided; must be non-null.");
+        public static Entry fromBytes(EntryType entryType, ByteArray data) throws MarshalException {
             if(data.size() == 0)
                 throw new MarshalException("Data type must provide non-empty data for the "  +
                         "serialization.");
@@ -197,7 +138,7 @@ public final class Marshal implements Comparable<Marshal> {
          * Gets the field object stored in this entry. This is equivalent to demarshaling the data
          * contained in this entry.
          */
-        public T getFieldObject() {
+        public T getFieldObject() throws MarshalException {
             if(this.fieldObject == null)
                 this.fieldObject = this.getDataType().demarshal(this.data);
             return this.fieldObject;
@@ -214,8 +155,13 @@ public final class Marshal implements Comparable<Marshal> {
 
             if(this.entryType != entry.getEntryType())
                 return false;
-            if(!this.getFieldObject().equals(entry.getFieldObject()))
+            try {
+                if(!this.getFieldObject().equals(entry.getFieldObject()))
+                    return false;
+            }
+            catch(MarshalException e) {
                 return false;
+            }
 
             return true;
         }
@@ -223,29 +169,40 @@ public final class Marshal implements Comparable<Marshal> {
         @Override
         public int hashCode() {
             // enum's hashCode is not stable across JVMs, so use the type code
-            int result = this.entryType.getTypeCode();
-            result = 31 * result + this.getFieldObject().hashCode();
-            return result;
+            try {
+                int result = this.entryType.getTypeCode();
+                result = 31 * result + this.getFieldObject().hashCode();
+                return result;
+            }
+            catch(MarshalException e) {
+                return 0;
+            }
         }
 
         @Override
         public String toString() {
-            return "{" + this.getEntryType().name() + "-" + this.getFieldObject() + "}";
+            try {
+                return "{" + this.getEntryType().name() + "-" + this.getFieldObject() + "}";
+            }
+            catch(MarshalException e) {
+                return "{ INVALID }";
+            }
         }
     }
 
     /**
      * Builder for a marshal.
      */
-    public static class Builder {
-        private List<Entry> contents;
+    public static final class Builder {
+        private ImmutableList.Builder<Entry> contents;
 
-        public Builder() {
-            this.contents = new ArrayList<Entry>();
+        private Builder() {
+            this.contents = ImmutableList.builder();
         }
 
-        public Builder(Marshal marshal) {
-            this.contents = marshal.contents;
+        private Builder(Marshal marshal) {
+            this.contents = ImmutableList.builder();
+            this.contents.addAll(marshal.contents);
         }
 
         public Builder addByte(byte b) {
@@ -297,7 +254,7 @@ public final class Marshal implements Comparable<Marshal> {
         /**
          * Appends the given marshal to the marshal under construction. This equivalent to calling
          * add for every entry in the provided marshal. This differs from {@link #addMarshal} in
-         * that addMarshal will add a Marshal as a sub-element, while this method exgtends the
+         * that addMarshal will add a Marshal as a sub-element, while this method extends the
          * current data structure with the contents of another Marshal.
          */
         public Builder appendMarshal(Marshal m) {
@@ -306,69 +263,59 @@ public final class Marshal implements Comparable<Marshal> {
         }
 
         public Marshal build() {
-            if(this.contents.isEmpty())
+            ImmutableList<Entry> contents = this.contents.build();
+            if(contents.isEmpty())
                 return Marshal.EMPTY;
             else
-                return new Marshal(this);
+                return new Marshal(contents);
         }
     }
 
     /**
      * Contents of the marshal.
      */
-    private List<Entry> contents;
+    private ImmutableList<Entry> contents;
 
-    /**
-     * Create a new marshal from a buidler.
-     */
-    private Marshal(Builder builder) {
-        this.contents = builder.contents;
-    }
-
-    /**
-     * Create a new marshal from a list of entries.
-     */
-    private Marshal(List<Entry> contents) {
+    private Marshal(ImmutableList<Entry> contents) {
         this.contents = contents;
     }
 
-    /**
-     * Create a new marshal object from the serialized byte form in native compatibility mode.
-     */
-    public Marshal(byte[] bytes) {
-        this(new ByteArray(bytes), null);
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static Builder builder(Marshal m) {
+        return new Builder(m);
+    }
+
+    public static Marshal fromBytes(ByteArray bytes) throws MarshalException {
+        return fromBytes(bytes, null);
+    }
+
+    public static Marshal fromBytes(byte[] bytes) throws MarshalException {
+        return fromBytes(new ByteArray(bytes));
     }
 
     /**
-     * Create a new marshal object from the serialized byte form in native compatibility mode.
+     * Reads a marshal from the serialized lexicographic marshal in the byte array.
      */
-    public Marshal(ByteArray data) {
-        this(data, null);
-    }
-
-    /**
-     * Create a new marshal object from the serialized byte form with the given compatibility
-     * mode.
-     *
-     * If the compatibility mode is not specified, then no compatibility mode (native mode) is
-     * used.
-     */
-    public Marshal(ByteArray data, MarshalCompatibilityMode compatibilityMode) {
-        this.contents = new ArrayList<Entry>();
+    public static Marshal fromBytes(ByteArray bytes, MarshalCompatibilityMode compatibilityMode)
+            throws MarshalException {
+        ImmutableList.Builder<Entry> contents = ImmutableList.builder();
 
         // if no data, then do not read anything and leave the marshal empty
-        if(data == null || data.size() == 0)
-            return;
+        if(bytes == null || bytes.size() == 0)
+            return Marshal.EMPTY;
 
         // check for an empty byte array, encoded as either a single separator byte or using the
         // legacy empty byte
-        if(data.getAt(0) == SEPARATOR || data.getAt(0) == EntryType.LEGACY_EMPTY.getTypeCode())
-            return;
+        if(bytes.getAt(0) == SEPARATOR || bytes.getAt(0) == EntryType.LEGACY_EMPTY.getTypeCode())
+            return Marshal.EMPTY;
 
         // split data into entries
         while(true) {
             // read the type code
-            byte typeCode = data.getAt(0);
+            byte typeCode = bytes.getAt(0);
 
             // adjust type code if in compatibility mode
             if(compatibilityMode != null) {
@@ -376,29 +323,82 @@ public final class Marshal implements Comparable<Marshal> {
             }
 
             // get the type
-            EntryType type = entryTypeCodes.get(typeCode);
-            if(type == null)
+            Optional<EntryType> type = EntryType.forCode(typeCode);
+            if(!type.isPresent())
                 throw new MarshalException("Type code " + typeCode + " is invalid.");
 
             // advance past the type code
-            data = data.from(1);
+            bytes = bytes.from(1);
 
             // find the position of the first separator character that is not escaped
-            int separatorPosition = findSeparator(data, SEPARATOR);
+            int separatorPosition = findSeparator(bytes, SEPARATOR);
 
             // get data, unescape, and save
-            ByteArray escapedValueBytes = data.to(separatorPosition);
+            ByteArray escapedValueBytes = bytes.to(separatorPosition);
             ByteArray valueBytes = unescape(escapedValueBytes, SEPARATOR);
-            this.contents.add(Entry.fromBytes(type, valueBytes));
+            contents.add(Entry.fromBytes(type.get(), valueBytes));
 
             // if next position is the same as size (legacy version, with no terminating
             // separator) or size-1 (new version, with a terminating separator), done processing
-            if(separatorPosition == data.size() || separatorPosition == (data.size() - 1))
+            if(separatorPosition == bytes.size() || separatorPosition == (bytes.size() - 1))
                 break;
 
             // advance past the separator
-            data = data.from(separatorPosition + 1);
+            bytes = bytes.from(separatorPosition + 1);
         }
+
+        ImmutableList<Entry> c = contents.build();
+        if(c.isEmpty())
+            return Marshal.EMPTY;
+        else
+            return new Marshal(c);
+    }
+
+    public static Marshal fromBytes(byte[] bytes, MarshalCompatibilityMode compatibilityMode)
+            throws MarshalException {
+        return fromBytes(new ByteArray(bytes), compatibilityMode);
+    }
+
+    public static Marshal read(DataInput dataInput) throws IOException {
+        return read(dataInput, null);
+    }
+
+    /**
+     * Reads a marshal from the serialized non-lexicographic encoded data from datainput.
+     */
+    public static Marshal read(DataInput dataInput, MarshalCompatibilityMode compatibilityMode)
+            throws IOException {
+        // number of elements to read
+        int length = dataInput.readInt();
+
+        // contents array
+        ImmutableList.Builder<Entry> contents = ImmutableList.builder();
+
+        // read data
+        for(int i = 0; i < length; i++) {
+            // type byte
+            byte typeCode = dataInput.readByte();
+
+            // adjust type code if in compatibility mode
+            if(compatibilityMode != null) {
+                typeCode = compatibilityMode.convertType(typeCode);
+            }
+
+            // type
+            Optional<EntryType> type = EntryType.forCode(typeCode);
+            if(!type.isPresent())
+                throw new MarshalException("Type code " + typeCode + " is invalid.");
+
+            // data
+            Entry e = Entry.fromData(type.get(), dataInput);
+            contents.add(e);
+        }
+
+        ImmutableList<Entry> c = contents.build();
+        if(c.isEmpty())
+            return Marshal.EMPTY;
+        else
+            return new Marshal(c);
     }
 
     /**
@@ -528,34 +528,6 @@ public final class Marshal implements Comparable<Marshal> {
     }
 
     /**
-     * Read the current marshal to the data input.
-     */
-    public static Marshal read(DataInput dataInput) throws IOException {
-        // number of elements to read
-        int length = dataInput.readInt();
-
-        // contents array
-        List<Entry> contents = new ArrayList<Entry>(length);
-
-        // read data
-        for(int i = 0; i < length; i++) {
-            // type byte
-            byte typeCode = dataInput.readByte();
-
-            // type
-            EntryType type = entryTypeCodes.get(typeCode);
-            if(type == null)
-                throw new MarshalException("Type code " + typeCode + " is invalid.");
-
-            // data
-            Entry e = Entry.fromData(type, dataInput);
-            contents.add(e);
-        }
-
-        return new Marshal(contents);
-    }
-
-    /**
      * Returns the type of the field at the given index.
      */
     public AbstractType<?> getTypeAt(int index) {
@@ -565,12 +537,12 @@ public final class Marshal implements Comparable<Marshal> {
     /**
      * Returns the object at the given index, regardless of type.
      */
-    public Object getAt(int index) {
+    public Object getAt(int index) throws MarshalException {
         Entry entry = this.contents.get(index);
         return entry.getFieldObject();
     }
 
-    public byte getByteAt(int index) {
+    public byte getByteAt(int index) throws MarshalException {
         Object o = this.getAt(index);
         if(o instanceof Byte) {
             return (Byte)o;
@@ -581,7 +553,7 @@ public final class Marshal implements Comparable<Marshal> {
         }
     }
 
-    public ByteArray getByteArrayAt(int index) {
+    public ByteArray getByteArrayAt(int index) throws MarshalException {
         Object o = this.getAt(index);
         if(o instanceof ByteArray) {
             return (ByteArray)o;
@@ -592,7 +564,7 @@ public final class Marshal implements Comparable<Marshal> {
         }
     }
 
-    public double getDoubleAt(int index) {
+    public double getDoubleAt(int index) throws MarshalException {
         Object o = this.getAt(index);
         if(o instanceof Double)
             return (Double)o;
@@ -601,7 +573,7 @@ public final class Marshal implements Comparable<Marshal> {
                     getTypeAt(index) + ", not Double.");
     }
 
-    public int getIntegerAt(int index) {
+    public int getIntegerAt(int index) throws MarshalException {
         Object o = this.getAt(index);
         if(o instanceof Integer)
             return (Integer)o;
@@ -610,7 +582,7 @@ public final class Marshal implements Comparable<Marshal> {
                     getTypeAt(index) + ", not Integer.");
     }
 
-    public long getLongAt(int index) {
+    public long getLongAt(int index) throws MarshalException {
         Object o = this.getAt(index);
         if(o instanceof Long)
             return (Long)o;
@@ -619,7 +591,7 @@ public final class Marshal implements Comparable<Marshal> {
                     getTypeAt(index) + ", not Long.");
     }
 
-    public String getStringAt(int index) {
+    public String getStringAt(int index) throws MarshalException {
         Object o = this.getAt(index);
         if(o instanceof String)
             return (String)o;
@@ -628,7 +600,7 @@ public final class Marshal implements Comparable<Marshal> {
                     getTypeAt(index) + ", not String.");
     }
 
-    public Marshal getMarshalAt(int index) {
+    public Marshal getMarshalAt(int index) throws MarshalException {
         Object o = this.getAt(index);
         if(o instanceof Marshal)
             return (Marshal)o;

@@ -1,4 +1,4 @@
-package com.fullcontact.hbase.marshal;
+package com.fullcontact.marshal;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -43,12 +43,12 @@ final class StringType extends AbstractType<String> {
 
     @Override
     public void write(String s, DataOutput dataOutput) throws IOException {
-        dataOutput.writeUTF(s);
+        IOUtil.writeUtf(s, dataOutput);
     }
 
     @Override
     public String read(DataInput dataInput) throws IOException {
-        return dataInput.readUTF();
+        return IOUtil.readUtf(dataInput);
     }
 
     @Override

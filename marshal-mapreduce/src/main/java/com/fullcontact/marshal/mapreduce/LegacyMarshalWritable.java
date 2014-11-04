@@ -1,6 +1,7 @@
-package com.fullcontact.hbase.marshal.mapreduce;
+package com.fullcontact.marshal.mapreduce;
 
-import com.fullcontact.hbase.marshal.Marshal;
+import com.fullcontact.marshal.Marshal;
+import com.fullcontact.marshal.MarshalCompatibilityMode;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
@@ -9,44 +10,33 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- * Writable that reads and writes {@see Marshal} instances.
+ * Writable that reads {@see Marshal} instances.
  *
- * Comparison is done on a pure binary format using only the comparator. A call to compareTo will
- * cause an UnsupportedOperationException. This format is undefined, but is guaranteed to return
- * zero when two marshals are equal, is guaranteed to return non-zero when two marshals are not
- * equal, and is stable. Otherwise, comparison is undefined.
+ * This version uses the legacy string mode for decoding marshals. Writing is not supported.
  *
  * @author Brandon Vargo
  */
-public class MarshalWritable implements WritableComparable<MarshalWritable> {
+public class LegacyMarshalWritable implements WritableComparable<LegacyMarshalWritable> {
     private Marshal marshal = null;
 
     static {
-        WritableComparator.define(MarshalWritable.class, new Comparator());
+        WritableComparator.define(LegacyMarshalWritable.class, new Comparator());
     }
 
     /**
      * Constructor for the writable framework only!
      */
-    public MarshalWritable() {
-        this(null);
-    }
-
-    /**
-     * Create a writeable from the given Marshal.
-     */
-    public MarshalWritable(Marshal marshal) {
-        this.marshal = marshal;
+    public LegacyMarshalWritable() {
     }
 
     @Override
     public void write(DataOutput dataOutput) throws IOException {
-        this.marshal.write(dataOutput);
+        throw new UnsupportedOperationException("Writing not supported.");
     }
 
     @Override
     public void readFields(DataInput dataInput) throws IOException {
-        this.marshal = Marshal.read(dataInput);
+        this.marshal = Marshal.read(dataInput, MarshalCompatibilityMode.LEGACY_STRINGS);
     }
 
     /**
@@ -57,17 +47,10 @@ public class MarshalWritable implements WritableComparable<MarshalWritable> {
     }
 
     /**
-     * Sets the current Marshal for this writable.
-     */
-    public void set(Marshal marshal) {
-        this.marshal = marshal;
-    }
-
-    /**
      * Use the comparator instead of this method. This method will cause an UnsupportedOperationException.
      */
     @Override
-    public int compareTo(MarshalWritable other) {
+    public int compareTo(LegacyMarshalWritable other) {
         throw new UnsupportedOperationException("Use the comparator.");
     }
 
@@ -76,8 +59,8 @@ public class MarshalWritable implements WritableComparable<MarshalWritable> {
         if(this == o)
             return true;
 
-        if(o instanceof MarshalWritable) {
-            MarshalWritable other = (MarshalWritable)o;
+        if(o instanceof LegacyMarshalWritable) {
+            LegacyMarshalWritable other = (LegacyMarshalWritable)o;
             if(this.get().equals(other.get()))
                 return true;
         }
@@ -97,10 +80,10 @@ public class MarshalWritable implements WritableComparable<MarshalWritable> {
 
     public static class Comparator extends WritableComparator {
         public Comparator() {
-            this(MarshalWritable.class);
+            this(LegacyMarshalWritable.class);
         }
 
-        public Comparator(Class<? extends MarshalWritable> cls) {
+        public Comparator(Class<? extends LegacyMarshalWritable> cls) {
            super(cls);
         }
 
