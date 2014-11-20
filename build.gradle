@@ -59,6 +59,8 @@ subprojects {
 
     compileJava.options.compilerArgs = [ "-Xlint:unchecked", "-Xlint:deprecation" ]
     compileTestJava.options.compilerArgs = [ "-Xlint:unchecked", "-Xlint:deprecation" ]
+    sourceCompatibility = "1.6"
+    targetCompatibility = "1.6"
 
     test {
         jvmArgs "-agentlib:hprof=cpu=samples,interval=2,depth=30,thread=y,file=build/profile.hprof"
