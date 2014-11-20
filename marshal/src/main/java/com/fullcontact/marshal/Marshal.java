@@ -390,7 +390,17 @@ public final class Marshal implements Comparable<Marshal> {
                 throw new MarshalException("Type code " + typeCode + " is invalid.");
 
             // data
-            Entry e = Entry.fromData(type.get(), dataInput);
+            Entry e;
+            if(type.get() == EntryType.MARSHAL) {
+                // override marshal handling, so we can keep the compatibility mode
+                // this should be made available for all types, but compatibility mode is going away
+                // soon anyways
+                e = new Entry(type.get());
+                e.fieldObject = Marshal.read(dataInput, compatibilityMode);
+            }
+            else {
+                e = Entry.fromData(type.get(), dataInput);
+            }
             contents.add(e);
         }
 

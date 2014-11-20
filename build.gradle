@@ -3,7 +3,7 @@ configure(subprojects) {
 }
 
 def GROUP_ID = "com.fullcontact.marshal"
-def VERSION = "1.1.0"
+def VERSION = "1.1.1"
 
 subprojects {
     apply plugin: "base"
