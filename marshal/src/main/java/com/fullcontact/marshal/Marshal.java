@@ -288,19 +288,10 @@ public final class Marshal implements Comparable<Marshal> {
         return new Builder(m);
     }
 
-    public static Marshal fromBytes(ByteArray bytes) throws MarshalException {
-        return fromBytes(bytes, null);
-    }
-
-    public static Marshal fromBytes(byte[] bytes) throws MarshalException {
-        return fromBytes(new ByteArray(bytes));
-    }
-
     /**
      * Reads a marshal from the serialized lexicographic marshal in the byte array.
      */
-    public static Marshal fromBytes(ByteArray bytes, MarshalCompatibilityMode compatibilityMode)
-            throws MarshalException {
+    public static Marshal fromBytes(ByteArray bytes) throws MarshalException {
         ImmutableList.Builder<Entry> contents = ImmutableList.builder();
 
         // if no data, then do not read anything and leave the marshal empty
@@ -316,11 +307,6 @@ public final class Marshal implements Comparable<Marshal> {
         while(true) {
             // read the type code
             byte typeCode = bytes.getAt(0);
-
-            // adjust type code if in compatibility mode
-            if(compatibilityMode != null) {
-                typeCode = compatibilityMode.convertType(typeCode);
-            }
 
             // get the type
             Optional<EntryType> type = EntryType.forCode(typeCode);
@@ -354,20 +340,17 @@ public final class Marshal implements Comparable<Marshal> {
             return new Marshal(c);
     }
 
-    public static Marshal fromBytes(byte[] bytes, MarshalCompatibilityMode compatibilityMode)
-            throws MarshalException {
-        return fromBytes(new ByteArray(bytes), compatibilityMode);
-    }
-
-    public static Marshal read(DataInput dataInput) throws IOException {
-        return read(dataInput, null);
+    /**
+     * Reads a marshal from the serialized lexicographic marshal in the byte array.
+     */
+    public static Marshal fromBytes(byte[] bytes) throws MarshalException {
+        return fromBytes(new ByteArray(bytes));
     }
 
     /**
-     * Reads a marshal from the serialized non-lexicographic encoded data from datainput.
+     * Reads a marshal from the serialized writable data.
      */
-    public static Marshal read(DataInput dataInput, MarshalCompatibilityMode compatibilityMode)
-            throws IOException {
+    public static Marshal read(DataInput dataInput) throws IOException {
         // number of elements to read
         int length = dataInput.readInt();
 
@@ -379,29 +362,14 @@ public final class Marshal implements Comparable<Marshal> {
             // type byte
             byte typeCode = dataInput.readByte();
 
-            // adjust type code if in compatibility mode
-            if(compatibilityMode != null) {
-                typeCode = compatibilityMode.convertType(typeCode);
-            }
-
             // type
             Optional<EntryType> type = EntryType.forCode(typeCode);
             if(!type.isPresent())
                 throw new MarshalException("Type code " + typeCode + " is invalid.");
 
             // data
-            Entry e;
-            if(type.get() == EntryType.MARSHAL) {
-                // override marshal handling, so we can keep the compatibility mode
-                // this should be made available for all types, but compatibility mode is going away
-                // soon anyways
-                e = new Entry(type.get());
-                e.fieldObject = Marshal.read(dataInput, compatibilityMode);
-            }
-            else {
-                e = Entry.fromData(type.get(), dataInput);
-            }
-            contents.add(e);
+            Entry entry = Entry.fromData(type.get(), dataInput);
+            contents.add(entry);
         }
 
         ImmutableList<Entry> c = contents.build();
