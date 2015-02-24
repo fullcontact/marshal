@@ -169,8 +169,7 @@ public class ByteArray implements Comparable<ByteArray> {
      */
     public byte getAt(int position) {
         if(position < 0 || position >= this.size())
-            throw new IndexOutOfBoundsException("Cannot access negative elements. " +
-                    "Got " + position);
+            throw new IndexOutOfBoundsException("Invalid position: " + position);
         return this.bytes[this.beginIndex + position];
     }
 
