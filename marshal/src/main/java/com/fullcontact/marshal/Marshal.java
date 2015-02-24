@@ -675,6 +675,9 @@ public final class Marshal implements Comparable<Marshal> {
             }
         }
 
+        if(bytesToEscape == 0)
+            return input;
+
         // allocate the new byte array
         byte[] escaped = new byte[input.size() + bytesToEscape];
 
@@ -723,6 +726,9 @@ public final class Marshal implements Comparable<Marshal> {
                 lastWasEscaped = false;
             }
         }
+
+        if(bytesToUnescape == 0)
+            return input;
 
         // allocate the new byte array
         byte[] unescaped = new byte[input.size() - bytesToUnescape];
