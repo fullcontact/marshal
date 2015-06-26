@@ -8,7 +8,7 @@ import com.google.common.collect.ImmutableMap;
  *
  * Note that these values *cannot* be changed without breaking binary compatibility.
  */
-enum EntryType {
+public enum EntryType {
     BYTE              ((byte)0x00, ByteType.INSTANCE),
     BYTE_ARRAY        ((byte)0x01, ByteArrayType.INSTANCE),
     DOUBLE            ((byte)0x02, DoubleType.INSTANCE),
@@ -37,7 +37,7 @@ enum EntryType {
         this.type = type;
     }
 
-    public static Optional<EntryType> forCode(byte b) {
+    static Optional<EntryType> forCode(byte b) {
         EntryType result = ENTRY_TYPE_CODES.get(b);
         return Optional.fromNullable(result);
     }
@@ -45,11 +45,11 @@ enum EntryType {
     /**
      * A single byte that indicates the type code for this entry type.
      */
-    public byte getTypeCode() {
+    byte getTypeCode() {
         return typeCode;
     }
 
-    public AbstractType<?> getType() {
+    AbstractType<?> getType() {
         return this.type;
     }
 }

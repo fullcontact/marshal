@@ -507,9 +507,11 @@ public final class Marshal implements Comparable<Marshal> {
 
     /**
      * Returns the type of the field at the given index.
+     *
+     * @throws IndexOutOfBoundsException
      */
-    public AbstractType<?> getTypeAt(int index) {
-        return this.contents.get(index).getEntryType().getType();
+    public EntryType getTypeAt(int index) {
+        return this.contents.get(index).getEntryType();
     }
 
     /**
