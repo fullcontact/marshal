@@ -215,6 +215,47 @@ public class MarshalTest {
         assertEquals(Marshal.EMPTY, m.getMarshalAt(6));
     }
 
+    @Test
+    public void testGetTypeAt() throws Exception {
+        byte[] bytes = { 0, 1, 2, 3, 4, 5 };
+        ByteArray byteArray = new ByteArray(bytes);
+        double d = -3.14d;
+        int i = 22;
+        long l = 123456789012345678l;
+        String s = " Thë quíck bröwn fox jùmps over the lazy dog! ";
+        byte b = (byte)0x80;
+
+        Marshal m = Marshal.builder()
+            .addByteArray(byteArray)
+            .addDouble(d)
+            .addInteger(i)
+            .addLong(l)
+            .addString(s)
+            .addByte(b)
+            .addMarshal(Marshal.EMPTY)
+            .build();
+
+        assertEquals(7, m.size());
+        assertFalse(m.isEmpty());
+
+        assertEquals(EntryType.BYTE_ARRAY, m.getTypeAt(0));
+        assertEquals(EntryType.DOUBLE, m.getTypeAt(1));
+        assertEquals(EntryType.INTEGER, m.getTypeAt(2));
+        assertEquals(EntryType.LONG, m.getTypeAt(3));
+        assertEquals(EntryType.STRING, m.getTypeAt(4));
+        assertEquals(EntryType.BYTE, m.getTypeAt(5));
+        assertEquals(EntryType.MARSHAL, m.getTypeAt(6));
+    }
+
+    @Test(expected=IndexOutOfBoundsException.class)
+    public void testGetTypeAt__outOfRange() throws Exception {
+        Marshal m = Marshal.builder()
+            .addInteger(2)
+            .build();
+
+        m.getTypeAt(1);
+    }
+
     @Test(expected=MarshalException.class)
     public void testGetAt__invalidType__byte() throws Exception {
         int i = 22;
