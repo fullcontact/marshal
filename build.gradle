@@ -92,13 +92,11 @@ project(":marshal-mapreduce") {
 
     dependencies {
         compile project(":marshal")
-
         compile group: "com.google.guava", name:"guava", version:"15.0"
-
         compile group: "org.apache.hadoop", name: "hadoop-client", version: "2.0.0-mr1-cdh4.1.0"
     }
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '1.11'
+    gradleVersion = '2.8'
 }
