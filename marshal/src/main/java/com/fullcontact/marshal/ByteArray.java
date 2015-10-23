@@ -1,6 +1,10 @@
 package com.fullcontact.marshal;
 
+
+import com.google.common.primitives.UnsignedBytes;
+
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -9,6 +13,9 @@ import java.util.List;
  * @author Brandon Vargo
  */
 public class ByteArray implements Comparable<ByteArray> {
+    private static final Comparator<byte[]> LEXICOGRAPHICAL_COMPARATOR =
+        UnsignedBytes.lexicographicalComparator();
+
     // backing storage
     private final byte[] bytes;
 
@@ -203,34 +210,46 @@ public class ByteArray implements Comparable<ByteArray> {
 
     @Override
     public int compareTo(ByteArray other) {
-        // current index
-        int index1 = this.beginIndex;
-        int index2 = other.beginIndex;
-
-        while(index1 < this.endIndex && index2 < other.endIndex) {
-            // get as ints, so we compare bytes in an unsigned manner, not individually signed
-            // bytes
-            int one = this.bytes[index1] & 0xFF;
-            int two = other.bytes[index2] & 0xFF;
-            if(one < two) {
-                return -1;
-            }
-            else if(one > two) {
-                return 1;
-            }
-            else {
-                index1++;
-                index2++;
-            }
+        // if this isn't a subslice of an array,
+        // we can use Guava's unsafe comparator for a significant speed boost.
+        // TODO(xorlev): it should be possible to use this for slices too, but we'll need
+        // to vendor Guava's LEXICOGRAPHICAL
+        if(this.beginIndex == 0
+                && this.endIndex == this.bytes.length
+                && other.beginIndex == 0
+                && other.endIndex == other.bytes.length) {
+            return LEXICOGRAPHICAL_COMPARATOR.compare(this.bytes, other.bytes);
         }
+        else {
+            // current index
+            int index1 = this.beginIndex;
+            int index2 = other.beginIndex;
 
-        // got to the end of at least one array, and did not find the difference
-        if(index1 == this.endIndex && index2 == other.endIndex)
-            return 0;
-        else if(index1 == this.endIndex && index2 != other.endIndex)
-            return -1;
-        else
-            return 1;
+            while(index1 < this.endIndex && index2 < other.endIndex) {
+                // get as ints, so we compare bytes in an unsigned manner, not individually signed
+                // bytes
+                int one = this.bytes[index1] & 0xFF;
+                int two = other.bytes[index2] & 0xFF;
+                if(one < two) {
+                    return -1;
+                }
+                else if(one > two) {
+                    return 1;
+                }
+                else {
+                    index1++;
+                    index2++;
+                }
+            }
+
+            // got to the end of at least one array, and did not find the difference
+            if(index1 == this.endIndex && index2 == other.endIndex)
+                return 0;
+            else if(index1 == this.endIndex && index2 != other.endIndex)
+                return -1;
+            else
+                return 1;
+        }
     }
 
     @Override
