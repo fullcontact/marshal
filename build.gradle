@@ -95,8 +95,10 @@ project(":marshal") {
 
     jmh {
         jmhVersion = jmhLibraryVersion
-        iterations = 3
+        iterations = 10
+        warmupIterations = 10
         fork = 2
+        resultsFile = project.file("${project.buildDir}/reports/jmh/results.csv")
         jvmArgs "-agentlib:hprof=cpu=samples,interval=2,depth=30,thread=y,file=build/profile.hprof"
     }
 
