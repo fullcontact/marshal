@@ -127,3 +127,10 @@ Please use `--no-ff` when merging feature branches.
 Pushing the master branch will run the
 [CI process](https://jenkins.fullcontact.com/job/datascience/job/marshal/),
 which will upload new JARs to artifactory.
+
+## Benchmarks
+Run JMH benchmarks with:
+
+    ./gradlew jmh
+
+Results will be under `marshal/build/reports/jmh`
