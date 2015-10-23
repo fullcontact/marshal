@@ -87,12 +87,6 @@ subprojects {
 
     group = GROUP_ID
     version = VERSION
-
-    // tell ivy to only look for updated libraries during the build process
-    // once a day; otherwise, the cache is used.
-    // To never search for updates, use "eternal", otherwise the form is
-    // "XXd XXh XXm XXs XXXms"
-    System.properties["ivy.cache.ttl.default"] = "01d"
 }
 
 project(":marshal") {
@@ -123,8 +117,8 @@ project(":marshal-mapreduce") {
 
     dependencies {
         compile project(":marshal")
-        compile group: "com.google.guava", name:"guava", version:"15.0"
-        compile group: "org.apache.hadoop", name: "hadoop-client", version: "2.0.0-mr1-cdh4.1.0"
+        compile group: "com.google.guava", name:"guava", version: "15.0"
+        compile group: "org.apache.hadoop", name: "hadoop-client", version: "2.6.0-mr1-cdh5.4.0"
     }
 }
 
