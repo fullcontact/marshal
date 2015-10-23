@@ -274,10 +274,22 @@ public final class Marshal implements Comparable<Marshal> {
     /**
      * Contents of the marshal.
      */
-    private ImmutableList<Entry> contents;
+    private final ImmutableList<Entry> contents;
+
+    /**
+     * Byte cache
+     */
+    private ByteArray bytes;
 
     private Marshal(ImmutableList<Entry> contents) {
+        this(contents, null);
+    }
+
+    private Marshal(ImmutableList<Entry> contents, ByteArray bytes) {
         this.contents = contents;
+
+        if(bytes != null)
+            this.bytes = bytes;
     }
 
     public static Builder builder() {
@@ -291,7 +303,8 @@ public final class Marshal implements Comparable<Marshal> {
     /**
      * Reads a marshal from the serialized lexicographic marshal in the byte array.
      */
-    public static Marshal fromBytes(ByteArray bytes) throws MarshalException {
+    public static Marshal fromBytes(final ByteArray orig) throws MarshalException {
+        ByteArray bytes = orig;
         ImmutableList.Builder<Entry> contents = ImmutableList.builder();
 
         // if no data, then do not read anything and leave the marshal empty
@@ -337,7 +350,7 @@ public final class Marshal implements Comparable<Marshal> {
         if(c.isEmpty())
             return Marshal.EMPTY;
         else
-            return new Marshal(c);
+            return new Marshal(c, orig);
     }
 
     /**
@@ -385,11 +398,15 @@ public final class Marshal implements Comparable<Marshal> {
      * @return A serialized, full Marshal.
      */
     public ByteArray toByteArray() {
-        ByteArray byteArray = this.prefixTerminated(this.contents.size());
-        if(byteArray.isEmpty())
-            return SEPARATOR_BYTE_ARRAY;
-        else
-            return byteArray;
+        if(this.bytes == null) {
+            ByteArray byteArray = this.prefixTerminated(this.contents.size());
+            if(byteArray.isEmpty())
+                this.bytes = SEPARATOR_BYTE_ARRAY;
+            else
+                this.bytes = byteArray;
+        }
+
+        return bytes;
     }
 
     /**
