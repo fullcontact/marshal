@@ -100,8 +100,10 @@ project(":marshal") {
     apply plugin: 'com.github.johnrengelman.shadow' // jmh
 
     jmh {
-        jmhVersion = jmhLibraryVersion // Specifies JMH version
-        resultFormat = 'TEXT'
+        jmhVersion = jmhLibraryVersion
+        iterations = 3
+        fork = 2
+        jvmArgs "-agentlib:hprof=cpu=samples,interval=2,depth=30,thread=y,file=build/profile.hprof"
     }
 
     dependencies {
