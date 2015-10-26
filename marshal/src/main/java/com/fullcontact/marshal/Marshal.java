@@ -322,8 +322,8 @@ public final class Marshal implements Comparable<Marshal> {
             byte typeCode = bytes.getAt(0);
 
             // get the type
-            Optional<EntryType> type = EntryType.forCode(typeCode);
-            if(!type.isPresent())
+            EntryType type = EntryType.forCode(typeCode);
+            if(type == null)
                 throw new MarshalException("Type code " + typeCode + " is invalid.");
 
             // advance past the type code
@@ -335,7 +335,7 @@ public final class Marshal implements Comparable<Marshal> {
             // get data, unescape, and save
             ByteArray escapedValueBytes = bytes.to(separatorPosition);
             ByteArray valueBytes = unescape(escapedValueBytes, SEPARATOR);
-            contents.add(Entry.fromBytes(type.get(), valueBytes));
+            contents.add(Entry.fromBytes(type, valueBytes));
 
             // if next position is the same as size (legacy version, with no terminating
             // separator) or size-1 (new version, with a terminating separator), done processing
@@ -361,6 +361,17 @@ public final class Marshal implements Comparable<Marshal> {
     }
 
     /**
+     * Reads a marshal from the serialized lexicographic marshal in the copied byte array.
+     */
+    @VisibleForTesting
+    static Marshal copyFromBytes(byte[] bytes) throws MarshalException {
+        byte[] dst = new byte[bytes.length];
+        System.arraycopy(bytes, 0, dst, 0, bytes.length);
+
+        return fromBytes(new ByteArray(dst));
+    }
+
+    /**
      * Reads a marshal from the serialized writable data.
      */
     public static Marshal read(DataInput dataInput) throws IOException {
@@ -376,12 +387,12 @@ public final class Marshal implements Comparable<Marshal> {
             byte typeCode = dataInput.readByte();
 
             // type
-            Optional<EntryType> type = EntryType.forCode(typeCode);
-            if(!type.isPresent())
+            EntryType type = EntryType.forCode(typeCode);
+            if(type == null)
                 throw new MarshalException("Type code " + typeCode + " is invalid.");
 
             // data
-            Entry entry = Entry.fromData(type.get(), dataInput);
+            Entry entry = Entry.fromData(type, dataInput);
             contents.add(entry);
         }
 
