@@ -1,6 +1,5 @@
 package com.fullcontact.marshal;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -37,9 +36,8 @@ public enum EntryType {
         this.type = type;
     }
 
-    static Optional<EntryType> forCode(byte b) {
-        EntryType result = ENTRY_TYPE_CODES.get(b);
-        return Optional.fromNullable(result);
+    static EntryType forCode(byte b) {
+        return ENTRY_TYPE_CODES.get(b);
     }
 
     /**
