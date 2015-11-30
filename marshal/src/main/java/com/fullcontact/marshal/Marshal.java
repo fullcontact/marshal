@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -279,7 +280,7 @@ public final class Marshal implements Comparable<Marshal> {
     /**
      * Byte cache
      */
-    private ByteArray bytes;
+    private SoftReference<ByteArray> bytes;
 
     private Marshal(ImmutableList<Entry> contents) {
         this(contents, null);
@@ -289,7 +290,7 @@ public final class Marshal implements Comparable<Marshal> {
         this.contents = contents;
 
         if(bytes != null)
-            this.bytes = bytes;
+            this.bytes = new SoftReference<ByteArray>(bytes);
     }
 
     public static Builder builder() {
@@ -409,15 +410,15 @@ public final class Marshal implements Comparable<Marshal> {
      * @return A serialized, full Marshal.
      */
     public ByteArray toByteArray() {
-        if(this.bytes == null) {
+        if(this.bytes == null || this.bytes.get() == null) {
             ByteArray byteArray = this.prefixTerminated(this.contents.size());
             if(byteArray.isEmpty())
-                this.bytes = SEPARATOR_BYTE_ARRAY;
+                this.bytes = new SoftReference<ByteArray>(SEPARATOR_BYTE_ARRAY);
             else
-                this.bytes = byteArray;
+                this.bytes = new SoftReference<ByteArray>(byteArray);
         }
 
-        return bytes;
+        return bytes.get();
     }
 
     /**
