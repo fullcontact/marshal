@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -274,10 +275,22 @@ public final class Marshal implements Comparable<Marshal> {
     /**
      * Contents of the marshal.
      */
-    private ImmutableList<Entry> contents;
+    private final ImmutableList<Entry> contents;
+
+    /**
+     * Byte cache
+     */
+    private SoftReference<ByteArray> bytes;
 
     private Marshal(ImmutableList<Entry> contents) {
+        this(contents, null);
+    }
+
+    private Marshal(ImmutableList<Entry> contents, ByteArray bytes) {
         this.contents = contents;
+
+        if(bytes != null)
+            this.bytes = new SoftReference<ByteArray>(bytes);
     }
 
     public static Builder builder() {
@@ -291,7 +304,8 @@ public final class Marshal implements Comparable<Marshal> {
     /**
      * Reads a marshal from the serialized lexicographic marshal in the byte array.
      */
-    public static Marshal fromBytes(ByteArray bytes) throws MarshalException {
+    public static Marshal fromBytes(final ByteArray orig) throws MarshalException {
+        ByteArray bytes = orig;
         ImmutableList.Builder<Entry> contents = ImmutableList.builder();
 
         // if no data, then do not read anything and leave the marshal empty
@@ -309,8 +323,8 @@ public final class Marshal implements Comparable<Marshal> {
             byte typeCode = bytes.getAt(0);
 
             // get the type
-            Optional<EntryType> type = EntryType.forCode(typeCode);
-            if(!type.isPresent())
+            EntryType type = EntryType.forCode(typeCode);
+            if(type == null)
                 throw new MarshalException("Type code " + typeCode + " is invalid.");
 
             // advance past the type code
@@ -322,7 +336,7 @@ public final class Marshal implements Comparable<Marshal> {
             // get data, unescape, and save
             ByteArray escapedValueBytes = bytes.to(separatorPosition);
             ByteArray valueBytes = unescape(escapedValueBytes, SEPARATOR);
-            contents.add(Entry.fromBytes(type.get(), valueBytes));
+            contents.add(Entry.fromBytes(type, valueBytes));
 
             // if next position is the same as size (legacy version, with no terminating
             // separator) or size-1 (new version, with a terminating separator), done processing
@@ -337,7 +351,7 @@ public final class Marshal implements Comparable<Marshal> {
         if(c.isEmpty())
             return Marshal.EMPTY;
         else
-            return new Marshal(c);
+            return new Marshal(c, orig);
     }
 
     /**
@@ -345,6 +359,17 @@ public final class Marshal implements Comparable<Marshal> {
      */
     public static Marshal fromBytes(byte[] bytes) throws MarshalException {
         return fromBytes(new ByteArray(bytes));
+    }
+
+    /**
+     * Reads a marshal from the serialized lexicographic marshal in the copied byte array.
+     */
+    @VisibleForTesting
+    static Marshal copyFromBytes(byte[] bytes) throws MarshalException {
+        byte[] dst = new byte[bytes.length];
+        System.arraycopy(bytes, 0, dst, 0, bytes.length);
+
+        return fromBytes(new ByteArray(dst));
     }
 
     /**
@@ -363,12 +388,12 @@ public final class Marshal implements Comparable<Marshal> {
             byte typeCode = dataInput.readByte();
 
             // type
-            Optional<EntryType> type = EntryType.forCode(typeCode);
-            if(!type.isPresent())
+            EntryType type = EntryType.forCode(typeCode);
+            if(type == null)
                 throw new MarshalException("Type code " + typeCode + " is invalid.");
 
             // data
-            Entry entry = Entry.fromData(type.get(), dataInput);
+            Entry entry = Entry.fromData(type, dataInput);
             contents.add(entry);
         }
 
@@ -385,11 +410,15 @@ public final class Marshal implements Comparable<Marshal> {
      * @return A serialized, full Marshal.
      */
     public ByteArray toByteArray() {
-        ByteArray byteArray = this.prefixTerminated(this.contents.size());
-        if(byteArray.isEmpty())
-            return SEPARATOR_BYTE_ARRAY;
-        else
-            return byteArray;
+        if(this.bytes == null || this.bytes.get() == null) {
+            ByteArray byteArray = this.prefixTerminated(this.contents.size());
+            if(byteArray.isEmpty())
+                this.bytes = new SoftReference<ByteArray>(SEPARATOR_BYTE_ARRAY);
+            else
+                this.bytes = new SoftReference<ByteArray>(byteArray);
+        }
+
+        return bytes.get();
     }
 
     /**

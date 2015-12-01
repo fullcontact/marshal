@@ -633,6 +633,53 @@ public class MarshalTest {
     }
 
     @Test
+    public void testSerializeDeserialize__chained() throws Exception {
+        byte[] bytes = { 0, 1, 2, 3, 4, 5 };
+        ByteArray byteArray = new ByteArray(bytes);
+        double d = -3.14d;
+        int i = 22;
+        long l = 123456789012345678l;
+        String s = " Thë quíck bröwn fox jùmps over the lazy dog! ";
+
+        Marshal input1 = Marshal.builder()
+                                .addByteArray(byteArray)
+                                .addDouble(d)
+                                .addInteger(i)
+                                .build();
+        Marshal input2 = Marshal.builder()
+                                .addLong(l)
+                                .addString(s)
+                                .build();
+
+        Marshal input = Marshal.builder(input1)
+                               .addMarshal(input2)
+                               .build();
+
+        ByteArray mBytes = input.toByteArray();
+        byte[] nested = input.getMarshalAt(3).toBytes();
+
+        Marshal m = Marshal.fromBytes(mBytes);
+        Marshal nestedM = Marshal.fromBytes(nested);
+        for(int j = 0; j < 5; j++) {
+            mBytes = m.toByteArray();
+            m = Marshal.copyFromBytes(mBytes.toArray());
+            nestedM = m.getMarshalAt(3);
+            nestedM = Marshal.fromBytes(nestedM.toBytes());
+            m = Marshal.builder(input1).addMarshal(nestedM).build();
+        }
+
+        assertArrayEquals(nested, nestedM.toBytes());
+        assertArrayEquals(mBytes.toArray(), m.toByteArray().toArray());
+        assertEquals(4, m.size());
+
+        // allow zero tolerance in the double comparison, since the representation should be exact
+        assertArrayEquals(byteArray.toArray(), m.getByteArrayAt(0).toArray());
+        assertEquals(d, m.getDoubleAt(1), 0);
+        assertEquals(i, m.getIntegerAt(2));
+        assertEquals(input2, m.getMarshalAt(3));
+    }
+
+    @Test
     public void testSerializeDeserialize__empty() throws Exception {
         Marshal input = Marshal.builder().build();
 
