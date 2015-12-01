@@ -131,6 +131,6 @@ which will upload new JARs to artifactory.
 ## Benchmarks
 Run JMH benchmarks with:
 
-    ./gradlew jmh
+    ./gradlew clean jmh
 
 Results will be under `marshal/build/reports/jmh`

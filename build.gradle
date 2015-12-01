@@ -12,7 +12,7 @@ buildscript {
 }
 
 def GROUP_ID = "com.fullcontact.marshal"
-def VERSION = "1.3.0"
+def VERSION = "1.4.0"
 
 configure(subprojects) {
     apply from:"file:../cobertura.gradle"
@@ -87,12 +87,6 @@ subprojects {
 
     group = GROUP_ID
     version = VERSION
-
-    // tell ivy to only look for updated libraries during the build process
-    // once a day; otherwise, the cache is used.
-    // To never search for updates, use "eternal", otherwise the form is
-    // "XXd XXh XXm XXs XXXms"
-    System.properties["ivy.cache.ttl.default"] = "01d"
 }
 
 project(":marshal") {
@@ -101,8 +95,10 @@ project(":marshal") {
 
     jmh {
         jmhVersion = jmhLibraryVersion
-        iterations = 3
+        iterations = 10
+        warmupIterations = 10
         fork = 2
+        resultsFile = project.file("${project.buildDir}/reports/jmh/results.csv")
         jvmArgs "-agentlib:hprof=cpu=samples,interval=2,depth=30,thread=y,file=build/profile.hprof"
     }
 
@@ -123,8 +119,8 @@ project(":marshal-mapreduce") {
 
     dependencies {
         compile project(":marshal")
-        compile group: "com.google.guava", name:"guava", version:"15.0"
-        compile group: "org.apache.hadoop", name: "hadoop-client", version: "2.0.0-mr1-cdh4.1.0"
+        compile group: "com.google.guava", name:"guava", version: "15.0"
+        compile group: "org.apache.hadoop", name: "hadoop-client", version: "2.6.0-mr1-cdh5.4.0"
     }
 }
 

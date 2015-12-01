@@ -9,6 +9,7 @@ import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.OperationsPerInvocation;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.infra.Blackhole;
 
 import java.util.concurrent.TimeUnit;
 
@@ -101,8 +102,23 @@ public class SerializationBenchmark {
     @Benchmark
     @Measurement(iterations = 5, time = 5, timeUnit = TimeUnit.SECONDS)
     @OperationsPerInvocation(1)
+    public void testDeserializationSpeed_accessFields(Blackhole bh) throws MarshalException {
+        Marshal m = Marshal.fromBytes(serialized);
+
+        bh.consume(m.getByteArrayAt(0));
+        bh.consume(m.getDoubleAt(1));
+        bh.consume(m.getIntegerAt(2));
+        bh.consume(m.getLongAt(3));
+        bh.consume(m.getStringAt(4));
+        bh.consume(m.getMarshalAt(5));
+        bh.consume(m.getByteAt(6));
+        bh.consume(m.getMarshalAt(7));
+    }
+
+    @Benchmark
+    @Measurement(iterations = 5, time = 5, timeUnit = TimeUnit.SECONDS)
+    @OperationsPerInvocation(1)
     public byte[] testReserializeSpeed() throws MarshalException {
-        Marshal marshal = Marshal.fromBytes(serialized);
-        return marshal.toBytes();
+        return Marshal.fromBytes(serialized).toBytes();
     }
 }
