@@ -410,15 +410,18 @@ public final class Marshal implements Comparable<Marshal> {
      * @return A serialized, full Marshal.
      */
     public ByteArray toByteArray() {
-        if(this.bytes == null || this.bytes.get() == null) {
-            ByteArray byteArray = this.prefixTerminated(this.contents.size());
+        ByteArray byteArray = this.bytes == null ? null : this.bytes.get();
+
+        if(byteArray == null) {
+            byteArray = this.prefixTerminated(this.contents.size());
+
             if(byteArray.isEmpty())
-                this.bytes = new SoftReference<ByteArray>(SEPARATOR_BYTE_ARRAY);
-            else
-                this.bytes = new SoftReference<ByteArray>(byteArray);
+                byteArray = SEPARATOR_BYTE_ARRAY;
+
+            this.bytes = new SoftReference<ByteArray>(byteArray);
         }
 
-        return bytes.get();
+        return byteArray;
     }
 
     /**
