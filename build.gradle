@@ -26,7 +26,6 @@ ext {
 allprojects {
     repositories {
         // local repository
-        // NOTE: gradle has issues with mavenLocal and mavenCentral being enabled at the same time
         //mavenLocal()
 
         // main repository
@@ -36,8 +35,8 @@ allprojects {
             name "Artifactory Realm"
             url "http://fullcontact.artifactoryonline.com/fullcontact/repo/"
             credentials {
-                username = "deployer"
-                password = "***REMOVED***"
+                username = repoUsername
+                password = repoPassword
             }
         }
     }
@@ -57,11 +56,11 @@ subprojects {
             mavenDeployer {
                 if (VERSION.endsWith("-SNAPSHOT")) {
                     repository(url: "https://fullcontact.artifactoryonline.com/fullcontact/libs-snapshots-local") {
-                        authentication(userName: "deployer", password: "***REMOVED***")
+                        authentication(userName: repoUsername, password: repoPassword)
                     }
                 } else {
                     repository(url: "https://fullcontact.artifactoryonline.com/fullcontact/libs-releases-local") {
-                        authentication(userName: "deployer", password: "***REMOVED***")
+                        authentication(userName: repoUsername, password: repoPassword)
                     }
                 }
             }
