@@ -208,6 +208,29 @@ public class ByteArray implements Comparable<ByteArray> {
         }
     }
 
+    /**
+     * Returns the array backing the current ByteArray. Does not copy the array or apply slice bounds.
+     *
+     * Intended for use when interfacing with APIs that take an array with start/end bounds
+     */
+    public byte[] backingArray() {
+        return this.bytes;
+    }
+
+    /**
+     * Returns absolute start bound of {@link #backingArray()}
+     */
+    public int beginIndex() {
+        return this.beginIndex;
+    }
+
+    /**
+     * Returns absolute end bound of {@link #backingArray()}
+     */
+    public int endIndex() {
+        return this.endIndex;
+    }
+
     @Override
     public int compareTo(ByteArray other) {
         // if this isn't a subslice of an array,
